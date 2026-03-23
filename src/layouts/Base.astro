@@ -14,26 +14,38 @@ const { title = site.name } = Astro.props;
 <!doctype html>
 <html lang="en">
 	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" href={site.icon} />
-		<title>{title}</title>
 		<script is:inline>
 			const saved = localStorage.getItem('theme') ?? 'dark';
 			document.documentElement.setAttribute('data-theme', saved);
 		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" href={site.icon} />
+		<title>{title}</title>
 	</head>
 	<body>
 		<NavBar logo={site.name} links={[
+			{
+				label: "Docs",
+				href: "/docs"
+			}
 		]} />
-		<main>
-			<slot />
-		</main>
+		<div class="page-layout">
+			<slot name="sidebar" />
+			<main class="main">
+				<slot />
+			</main>
+		</div>
 	</body>
 </html>
 
 <style is:global lang="scss">
-	main {
+	.page-layout:has(aside) {
+		display: grid;
+		grid-template-columns: 220px 1fr;
+	}
+
+	.main {
 		max-width: 1100px;
 		margin: 0 auto;
 		padding: 3rem 1.5rem;

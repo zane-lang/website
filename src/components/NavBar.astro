@@ -86,9 +86,9 @@ const current = Astro.url.pathname;
 			color: #{$gold};
 			text-decoration: none;
 			flex-shrink: 0;
-			transition: opacity 0.15s ease;
+			transition: color 0.15s ease;
 
-			&:hover { opacity: 0.8; }
+			&:hover { color: var(--gold-hover); }
 		}
 
 		&__links {

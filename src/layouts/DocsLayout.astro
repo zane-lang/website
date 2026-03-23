@@ -1,0 +1,224 @@
+---
+import Base from './Base.astro';
+import { getCollection } from 'astro:content';
+
+interface Props {
+	title: string;
+	headings?: any[];
+}
+
+const { title } = Astro.props;
+const docs = await getCollection('docs');
+const current = Astro.url.pathname;
+const rootDoc = docs.find(d => d.id === 'docs');
+
+type FlatNode = {
+	title: string;
+	href: string;
+	structure: ('line' | 'edge' | 'corner' | 'empty')[];
+};
+
+type TreeNode = {
+	title: string;
+	href: string;
+	children: Record<string, TreeNode>;
+};
+
+const tree: Record<string, TreeNode> = {};
+for (const doc of docs.filter(d => d.id !== 'docs').sort((a, b) => a.id.localeCompare(b.id))) {
+	const parts = doc.id.replace(/^docs\//, '').split('/');
+	let node = tree;
+	for (let i = 0; i < parts.length; i++) {
+		const part = parts[i];
+		if (!node[part]) node[part] = { title: part, href: '', children: {} };
+		if (i === parts.length - 1) {
+			node[part].title = doc.data.title;
+			node[part].href = '/docs/' + parts.join('/');
+		}
+		node = node[part].children;
+	}
+}
+
+function flatten(
+	nodes: Record<string, TreeNode>,
+	ancestors: ('line' | 'empty')[] = []
+): FlatNode[] {
+	const entries = Object.entries(nodes);
+	return entries.flatMap(([, node], i) => {
+		const isLast = i === entries.length - 1;
+		const currentStructure: ('line' | 'edge' | 'corner' | 'empty')[] = [
+			...ancestors,
+			isLast ? 'corner' : 'edge'
+		];
+		const childAncestors: ('line' | 'empty')[] = [
+			...ancestors,
+			isLast ? 'empty' : 'line'
+		];
+		return [
+			{ title: node.title, href: node.href, structure: currentStructure },
+			...flatten(node.children, childAncestors),
+		];
+	});
+}
+
+const flat = flatten(tree);
+---
+
+<Base title={title}>
+	<aside slot="sidebar" class="docs-sidebar">
+		<nav class="tree">
+			{rootDoc && (
+				<a href="/docs" class={`tree__link ${current === '/docs' || current === '/docs/' ? 'tree__link--active' : ''}`}>
+					{rootDoc.data.title}
+				</a>
+			)}
+			<div class="tree__divider" />
+			{flat.map(node => (
+				<a href={node.href} class={`tree__item ${current === node.href ? 'tree__item--active' : ''}`}>
+					<div class="tree__path">
+						{node.structure.map(type => (
+							<div class={`path-unit path-unit--${type}`} />
+						))}
+					</div>
+					<span class="tree__label">{node.title}</span>
+				</a>
+			))}
+		</nav>
+	</aside>
+	<main class="docs-content">
+		<slot />
+	</main>
+</Base>
+
+<style is:global lang="scss">
+	.docs-sidebar {
+		padding: 1.5rem 1rem 2rem 1.5rem;
+		border-right: 1px solid var(--border);
+		background: var(--bg-subtle);
+		height: calc(100vh - 60px); // Adjust based on your navbar height
+		position: sticky;
+		top: 60px; // Match navbar height
+		overflow-y: auto;
+		
+		// Subtle scrollbar
+		&::-webkit-scrollbar {
+			width: 4px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: var(--border);
+			border-radius: 4px;
+		}
+	}
+
+	.tree {
+		display: flex;
+		flex-direction: column;
+		font-size: 0.875rem;
+	}
+
+	.tree__link {
+		display: block;
+		padding: 0.35rem 0;
+		color: var(--text);
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.9rem;
+		letter-spacing: -0.01em;
+
+		&:hover {
+			color: var(--accent);
+		}
+
+		&--active {
+			color: var(--accent);
+		}
+	}
+
+	.tree__divider {
+		height: 1px;
+		background: var(--border);
+		margin: 0.75rem 0;
+	}
+
+	.tree__item {
+		display: flex;
+		align-items: stretch;
+		text-decoration: none;
+		color: var(--text-muted);
+		transition: color 0.15s ease;
+		border-radius: 4px;
+		margin-right: 0.5rem;
+
+		&:hover {
+			color: var(--text);
+			background: var(--bg);
+		}
+
+		&--active {
+			color: var(--accent);
+			font-weight: 500;
+			background: var(--accent-soft);
+
+			&:hover {
+				background: var(--accent-soft);
+			}
+		}
+	}
+
+	.tree__path {
+		display: flex;
+		flex-shrink: 0;
+		align-self: stretch;
+	}
+
+	.tree__label {
+		display: flex;
+		align-items: center;
+		white-space: nowrap;
+		padding: 0.4rem 0.5rem 0.4rem 0.25rem;
+	}
+
+	.path-unit {
+		position: relative;
+		width: 1.25rem;
+		flex-shrink: 0;
+
+		&--line::before,
+		&--edge::before {
+			content: '';
+			position: absolute;
+			left: calc(50% - 0.5px);
+			top: 0;
+			bottom: 0;
+			width: 1px;
+			background: var(--border);
+		}
+
+		&--corner::before {
+			content: '';
+			position: absolute;
+			left: calc(50% - 0.5px);
+			top: 0;
+			height: 50%;
+			width: 1px;
+			background: var(--border);
+		}
+
+		&--edge::after,
+		&--corner::after {
+			content: '';
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			right: 0;
+			height: 1px;
+			background: var(--border);
+			transform: translateY(-0.5px);
+		}
+	}
+
+	.docs-content {
+		padding: 2rem 3rem;
+		max-width: 900px;
+	}
+</style>
