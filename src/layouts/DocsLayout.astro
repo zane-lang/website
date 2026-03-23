@@ -9,7 +9,7 @@ interface Props {
 
 const { title } = Astro.props;
 const docs = await getCollection('docs');
-const current = Astro.url.pathname;
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
 const rootDoc = docs.find(d => d.id === 'docs');
 
 type FlatNode = {
