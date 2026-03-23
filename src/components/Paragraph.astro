@@ -1,0 +1,27 @@
+---
+interface Props {
+	size?: 'sm' | 'md' | 'lg';
+	muted?: boolean;
+	balance?: boolean;
+}
+
+const { size = 'md', muted = false, balance = false } = Astro.props;
+---
+
+<p class={`text text--${size} ${muted ? 'text--muted' : ''} ${balance ? 'text--balance' : ''}`}>
+	<slot />
+</p>
+
+<style lang="scss">
+	.text {
+		color: var(--text);
+		max-width: 65ch;
+
+		&--sm	{ font-size: 0.85rem; line-height: 1.5; }
+		&--md	{ font-size: 1rem;		line-height: 1.7; }
+		&--lg	{ font-size: 1.15rem; line-height: 1.8; }
+
+		&--muted	 { color: var(--text-muted); }
+		&--balance { text-wrap: balance; }
+	}
+</style>

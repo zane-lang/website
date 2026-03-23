@@ -1,0 +1,71 @@
+---
+interface Props {
+	variant?: 'primary' | 'secondary' | 'ghost';
+	size?: 'sm' | 'md' | 'lg';
+	href?: string;
+	disabled?: boolean;
+	[key: string]: any;
+}
+
+const { variant = 'primary', size = 'md', href, disabled = false, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag
+	class={`btn btn--${variant} btn--${size}`}
+	href={href}
+	disabled={disabled}
+	{...rest}
+>
+	<slot />
+</Tag>
+
+<style lang="scss">
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-family: inherit;
+		font-weight: 500;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.15s ease;
+		white-space: nowrap;
+
+		&:disabled {
+			opacity: 0.4;
+			pointer-events: none;
+		}
+
+		// Variants
+			&--primary {
+			background: var(--accent);
+			color: #fff;
+
+			&:hover { opacity: 0.85; text-decoration: none; }
+		}
+
+		&--secondary {
+			background: var(--accent-soft);
+			color: var(--accent);
+			border-color: var(--border);
+
+			&:hover { border-color: var(--accent); text-decoration: none; }
+		}
+
+		&--ghost {
+			background: transparent;
+			color: var(--text-muted);
+			border-color: var(--border);
+
+			&:hover { color: var(--text); background: var(--bg-subtle); text-decoration: none; }
+		}
+
+		// Sizes
+			&--sm { font-size: 0.8rem;  padding: 0.35rem 0.75rem; }
+		&--md { font-size: 0.9rem;  padding: 0.55rem 1.1rem;  }
+		&--lg { font-size: 1rem;    padding: 0.75rem 1.5rem;  }
+	}
+</style>

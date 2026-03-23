@@ -1,0 +1,138 @@
+---
+import { Sun, Moon, Github } from 'lucide-astro';
+
+interface NavLink {
+	label: string;
+	href: string;
+}
+interface Props {
+	links?: NavLink[];
+	logo?: string;
+}
+const { links = [], logo = 'Zane' } = Astro.props;
+const current = Astro.url.pathname;
+---
+
+<header class="nav">
+	<div class="nav__inner">
+		<a href="/" class="nav__logo">{logo}</a>
+		<nav class="nav__links">
+			{links.map((link) => (
+
+			<a
+				href={link.href}
+				class={`nav__link ${current === link.href ? 'nav__link--active' : ''}`}
+			>
+			{link.label}
+			</a>
+			))}
+		</nav>
+		<div class="nav__actions">
+			<slot name="actions" />
+			<a href="https://github.com/zane-lang" class="nav__theme" aria-label="GitHub" target="_blank" rel="noopener">
+				<Github size={16} />
+			</a>
+			<button id="theme-toggle" class="nav__theme" aria-label="Toggle theme">
+				<Sun size={16} class="icon-sun" />
+				<Moon size={16} class="icon-moon" />
+			</button>
+		</div>
+	</div>
+</header>
+
+<script>
+	const btn = document.getElementById('theme-toggle');
+	const html = document.documentElement;
+
+	const update = () => {
+		const isDark = html.dataset.theme === 'dark';
+		btn?.querySelector('.icon-sun')?.style.setProperty('display', isDark ? 'block' : 'none');
+		btn?.querySelector('.icon-moon')?.style.setProperty('display', isDark ? 'none' : 'block');
+	};
+
+	update();
+	btn?.addEventListener('click', () => {
+		const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+		html.setAttribute('data-theme', next);
+		localStorage.setItem('theme', next);
+		update();
+	});
+</script>
+
+<style lang="scss">
+	$gold: #8f7f58;
+
+	.nav {
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		background: color-mix(in srgb, #{$gold} 8%, var(--bg));
+		border-bottom: 1px solid color-mix(in srgb, #{$gold} 25%, transparent);
+		backdrop-filter: blur(12px);
+
+		&__inner {
+			max-width: 1100px;
+			margin: 0 auto;
+			padding: 0 1.5rem;
+			height: 56px;
+			display: flex;
+			align-items: center;
+			gap: 2rem;
+		}
+
+		&__logo {
+			font-weight: 600;
+			font-size: 1.1rem;
+			color: #{$gold};
+			text-decoration: none;
+			flex-shrink: 0;
+			transition: opacity 0.15s ease;
+
+			&:hover { opacity: 0.8; }
+		}
+
+		&__links {
+			display: flex;
+			gap: 0.25rem;
+			flex: 1;
+		}
+
+		&__link {
+			font-size: 0.9rem;
+			color: var(--text-muted);
+			text-decoration: none;
+			padding: 0.35rem 0.75rem;
+			border-radius: 6px;
+			transition: all 0.15s ease;
+
+			&:hover { color: var(--text); background: var(--bg-subtle); }
+			&--active { color: var(--text); background: var(--bg-subtle); }
+		}
+
+		&__actions {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: auto;
+		}
+
+		&__theme {
+			background: color-mix(in srgb, #{$gold} 12%, transparent);
+			border: 1px solid color-mix(in srgb, #{$gold} 40%, transparent);
+			border-radius: 6px;
+			width: 32px;
+			height: 32px;
+			cursor: pointer;
+			color: #{$gold};
+			transition: all 0.15s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			&:hover {
+				background: color-mix(in srgb, #{$gold} 25%, transparent);
+				border-color: #{$gold};
+			}
+		}
+	}
+</style>

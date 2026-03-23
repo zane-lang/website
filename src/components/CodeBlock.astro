@@ -1,0 +1,88 @@
+---
+interface Props {
+	code: string;
+	lang?: string;
+	filename?: string;
+}
+
+const { code, lang = 'text', filename } = Astro.props;
+---
+
+<div class="codeblock">
+	<div class="codeblock__header">
+		<span class="codeblock__lang">{filename ?? lang}</span>
+		<button class="codeblock__copy" data-code={code}>Copy</button>
+	</div>
+	<pre><code>{code}</code></pre>
+</div>
+
+<script>
+	document.querySelectorAll('.codeblock__copy').forEach(btn => {
+		btn.addEventListener('click', async () => {
+			const code = (btn as HTMLElement).dataset.code ?? '';
+			await navigator.clipboard.writeText(code);
+			btn.textContent = 'Copied!';
+			setTimeout(() => btn.textContent = 'Copy', 2000);
+		});
+	});
+</script>
+
+<style lang="scss">
+	.codeblock {
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		overflow: hidden;
+
+		&__header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 0.5rem 1rem;
+			background: var(--bg-subtle);
+			border-bottom: 1px solid var(--border);
+		}
+
+		&__lang {
+			font-family: 'Geist Mono', monospace;
+			font-size: 0.75rem;
+			color: var(--text-muted);
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
+
+		&__copy {
+			font-family: inherit;
+			font-size: 0.75rem;
+			font-weight: 500;
+			color: var(--text-muted);
+			background: none;
+			border: 1px solid var(--border);
+			border-radius: 5px;
+			padding: 0.2rem 0.6rem;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			&:hover {
+				color: var(--text);
+				border-color: var(--accent);
+			}
+		}
+
+		pre {
+			margin: 0;
+			padding: 1.25rem;
+			background: var(--code-bg);
+			border-radius: 0;
+			border: none;
+			overflow-x: auto;
+
+			code {
+				background: none;
+				border: none;
+				padding: 0;
+				font-size: 0.9rem;
+				line-height: 1.7;
+			}
+		}
+	}
+</style>

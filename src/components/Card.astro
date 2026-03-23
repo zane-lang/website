@@ -1,0 +1,48 @@
+---
+interface Props {
+	title?: string;
+	href?: string;
+	padding?: 'sm' | 'md' | 'lg';
+}
+
+const { title, href, padding = 'md' } = Astro.props;
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag class={`card card--${padding} ${href ? 'card--link' : ''}`} href={href}>
+	{title && <h3 class="card__title">{title}</h3>}
+	<slot />
+</Tag>
+
+<style lang="scss">
+	.card {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		display: block;
+		text-decoration: none;
+		color: inherit;
+
+		&--sm	{ padding: 1rem; }
+		&--md	{ padding: 1.5rem; }
+		&--lg	{ padding: 2rem; }
+
+		&--link {
+			transition: border-color 0.15s ease, box-shadow 0.15s ease;
+			cursor: pointer;
+
+			&:hover {
+				border-color: var(--accent);
+				box-shadow: 0 0 0 3px var(--accent-soft);
+				text-decoration: none;
+			}
+		}
+
+		&__title {
+			font-size: 1rem;
+			font-weight: 600;
+			margin-bottom: 0.5rem;
+			color: var(--text);
+		}
+	}
+</style>

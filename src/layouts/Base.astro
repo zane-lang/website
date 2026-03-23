@@ -1,0 +1,41 @@
+---
+import "../styles/defaults.scss";
+import "../styles/global.scss";
+import { site } from '../config.ts';
+import NavBar from '../components/NavBar.astro';
+
+interface Props {
+	title?: string;
+}
+
+const { title = site.name } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" href={site.icon} />
+		<title>{title}</title>
+		<script is:inline>
+			const saved = localStorage.getItem('theme') ?? 'dark';
+			document.documentElement.setAttribute('data-theme', saved);
+		</script>
+	</head>
+	<body>
+		<NavBar logo={site.name} links={[
+		]} />
+		<main>
+			<slot />
+		</main>
+	</body>
+</html>
+
+<style is:global lang="scss">
+	main {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+</style>

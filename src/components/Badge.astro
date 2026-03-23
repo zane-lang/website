@@ -1,0 +1,72 @@
+---
+interface Props {
+	variant?: 'default' | 'accent' | 'success' | 'warning' | 'danger';
+}
+
+const { variant = 'default' } = Astro.props;
+---
+
+<span class={`badge badge--${variant}`}>
+	<slot />
+</span>
+
+<style lang="scss">
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		padding: 0.2rem 0.6rem;
+		border-radius: 99px;
+		border: 1px solid transparent;
+
+		&--default {
+			background: var(--bg-subtle);
+			color: var(--text-muted);
+			border-color: var(--border);
+		}
+
+		&--accent {
+			background: var(--accent-soft);
+			color: var(--accent);
+			border-color: var(--accent);
+		}
+
+		&--success {
+			background: #e6f9f0;
+			color: #1a7a4a;
+			border-color: #a3e6c5;
+
+			:root[data-theme="dark"] & {
+				background: #0d2e1e;
+				color: #4ade80;
+				border-color: #166534;
+			}
+		}
+
+		&--warning {
+			background: #fff8e6;
+			color: #7a5500;
+			border-color: #ffd980;
+
+			:root[data-theme="dark"] & {
+				background: #2e2200;
+				color: #facc15;
+				border-color: #713f12;
+			}
+		}
+
+		&--danger {
+			background: #fef0f0;
+			color: #7a1a1a;
+			border-color: #fca5a5;
+
+			:root[data-theme="dark"] & {
+				background: #2e0d0d;
+				color: #f87171;
+				border-color: #7f1d1d;
+			}
+		}
+	}
+</style>

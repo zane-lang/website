@@ -1,0 +1,64 @@
+---
+interface Props {
+	type?: 'text' | 'email' | 'password' | 'search';
+	placeholder?: string;
+	label?: string;
+	name?: string;
+	value?: string;
+	disabled?: boolean;
+}
+
+const { type = 'text', placeholder, label, name, value, disabled = false } = Astro.props;
+const id = name ?? Math.random().toString(36).slice(2);
+---
+
+<div class="field">
+	{label && <label class="field__label" for={id}>{label}</label>}
+	<input
+		class="field__input"
+		{id}
+		{type}
+		{name}
+		{placeholder}
+		{value}
+		{disabled}
+	/>
+</div>
+
+<style lang="scss">
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+
+		&__label {
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: var(--text);
+		}
+
+		&__input {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 0.55rem 0.9rem;
+			font-size: 0.9rem;
+			color: var(--text);
+			width: 100%;
+			transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+			&::placeholder { color: var(--text-muted); }
+
+			&:focus {
+				outline: none;
+				border-color: var(--accent);
+				box-shadow: 0 0 0 3px var(--accent-soft);
+			}
+
+			&:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+			}
+		}
+	}
+</style>

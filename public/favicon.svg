@@ -1,1 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><path fill-rule="evenodd" d="M81 36 64 0 47 36l-1 2-9-10a6 6 0 0 0-9 9l10 10h-2L0 64l36 17h2L28 91a6 6 0 1 0 9 9l9-10 1 2 17 36 17-36v-2l9 10a6 6 0 1 0 9-9l-9-9 2-1 36-17-36-17-2-1 9-9a6 6 0 1 0-9-9l-9 10v-2Zm-17 2-2 5c-4 8-11 15-19 19l-5 2 5 2c8 4 15 11 19 19l2 5 2-5c4-8 11-15 19-19l5-2-5-2c-8-4-15-11-19-19l-2-5Z" clip-rule="evenodd"/><path d="M118 19a6 6 0 0 0-9-9l-3 3a6 6 0 1 0 9 9l3-3Zm-96 4c-2 2-6 2-9 0l-3-3a6 6 0 1 1 9-9l3 3c3 2 3 6 0 9Zm0 82c-2-2-6-2-9 0l-3 3a6 6 0 1 0 9 9l3-3c3-2 3-6 0-9Zm96 4a6 6 0 0 1-9 9l-3-3a6 6 0 1 1 9-9l3 3Z"/><style>path{fill:#000}@media (prefers-color-scheme:dark){path{fill:#fff}}</style></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="26.249998mm"
+   height="26.249996mm"
+   viewBox="0 0 26.249998 26.249996"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient9">
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="0"
+         id="stop9" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0.78431374;"
+         offset="0.47188756"
+         id="stop5" />
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="1"
+         id="stop10" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3">
+      <stop
+         style="stop-color:#00d7be;stop-opacity:1;"
+         offset="0"
+         id="stop3" />
+      <stop
+         style="stop-color:#1f7f9b;stop-opacity:1;"
+         offset="0.30923694"
+         id="stop1" />
+      <stop
+         style="stop-color:#004a7a;stop-opacity:1;"
+         offset="1"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#linearGradient3"
+       id="linearGradient6"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.1052631,0,0,1.1052631,-2.4342082,-2.434208)"
+       x1="11.250001"
+       y1="22.499998"
+       x2="35"
+       y2="22.499998" />
+    <linearGradient
+       xlink:href="#linearGradient9"
+       id="linearGradient7"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="rotate(180,22.5,22.499998)"
+       x1="10.00001"
+       y1="22.499996"
+       x2="24.999994"
+       y2="22.499996" />
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-6.2500005,-6.2499995)">
+    <g
+       id="g5-8"
+       transform="translate(-3.7500005,-3.7500004)">
+      <path
+         style="font-variation-settings:'opsz' 36, 'wght' 700;fill:url(#linearGradient6);fill-rule:nonzero;stroke-width:3.17512;stroke-dasharray:none;stroke-opacity:0.371002"
+         d="m 15.526316,10 -5.526315,5.526316 v 16.578943 l 4.144737,4.144738 H 30.723683 L 36.25,30.723683 V 14.144737 L 32.105263,10 Z"
+         id="path1-5" />
+      <g
+         id="g4-7"
+         style="fill:#000000;fill-opacity:1">
+        <path
+           style="font-variation-settings:'opsz' 36, 'wght' 700;fill:#000000;fill-opacity:1;stroke-width:2.873;stroke-opacity:0.371002"
+           d="m 11.25,16.249999 h 13.750001 l 5,-5.000001 -13.750001,1e-6 z"
+           id="path2-6" />
+        <path
+           id="path2-8-1"
+           style="font-variation-settings:'opsz' 36, 'wght' 700;fill:#8f7f58;fill-opacity:1;stroke-width:2.873;stroke-opacity:0.371002"
+           d="m 31.250236,11.249906 -20.00033,20.00033 3.750159,3.749642 h 15.000118 l 4.999695,-4.999695 H 19.99976 L 34.999878,15.000065 Z" />
+      </g>
+      <path
+         style="font-variation-settings:'opsz' 36, 'wght' 700;fill:url(#linearGradient7);fill-rule:nonzero;stroke-width:2.87299;stroke-opacity:0.371002"
+         d="m 35.000001,14.999999 v 14.999999 h -15 z"
+         id="path4-8" />
+    </g>
+  </g>
+</svg>
