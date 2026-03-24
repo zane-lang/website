@@ -74,12 +74,12 @@ const flat = flatten(tree);
 			)}
 			<div class="tree__divider" />
 			{flat.map(node => (
-				<a href={node.href} class={`tree__item ${current === node.href ? 'tree__item--active' : ''}`}>
+				<a href={node.href} title={node.title} class={`tree__item ${current === node.href ? 'tree__item--active' : ''}`}>
 					<div class="tree__path">
-						{node.structure.map(type => (
-							<div class={`path-unit path-unit--${type}`} />
-						))}
-					</div>
+						{node.structure.slice(1).map(type => (
+						<div class={`path-unit path-unit--${type}`} />
+							))}
+						</div>
 					<span class="tree__label">{node.title}</span>
 				</a>
 			))}
@@ -92,15 +92,14 @@ const flat = flatten(tree);
 
 <style is:global lang="scss">
 	.docs-sidebar {
-		padding: 1.5rem 1rem 2rem 1.5rem;
+		padding: 1.5rem 0.5rem 2rem 1rem;
 		border-right: 1px solid var(--border);
 		background: var(--bg-subtle);
-		height: calc(100vh - 60px); // Adjust based on your navbar height
+		height: calc(100vh - 60px);
 		position: sticky;
-		top: 60px; // Match navbar height
+		top: 60px;
 		overflow-y: auto;
-		
-		// Subtle scrollbar
+
 		&::-webkit-scrollbar {
 			width: 4px;
 		}
@@ -146,22 +145,14 @@ const flat = flatten(tree);
 		text-decoration: none;
 		color: var(--text-muted);
 		transition: color 0.15s ease;
-		border-radius: 4px;
-		margin-right: 0.5rem;
 
 		&:hover {
 			color: var(--text);
-			background: var(--bg);
 		}
 
 		&--active {
 			color: var(--accent);
 			font-weight: 500;
-			background: var(--accent-soft);
-
-			&:hover {
-				background: var(--accent-soft);
-			}
 		}
 	}
 
@@ -172,15 +163,17 @@ const flat = flatten(tree);
 	}
 
 	.tree__label {
-		display: flex;
-		align-items: center;
+		display: block;
+		padding: 0.25rem 0 0.25rem 0.2rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		white-space: nowrap;
-		padding: 0.4rem 0.5rem 0.4rem 0.25rem;
+		min-width: 0;
 	}
 
 	.path-unit {
 		position: relative;
-		width: 1.25rem;
+		width: 1rem;
 		flex-shrink: 0;
 
 		&--line::before,
