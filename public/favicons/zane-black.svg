@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 99.999998 100"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="Zane Black.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#9a9a9a"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="false"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="false"
+     inkscape:deskcolor="#1a1a1a"
+     inkscape:document-units="mm"
+     showborder="false"
+     borderlayer="false"
+     inkscape:clip-to-page="false"
+     inkscape:antialias-rendering="true"
+     labelstyle="default"
+     showgrid="true"
+     inkscape:lockguides="true"
+     showguides="true"
+     guidecolor="#4828ff"
+     guideopacity="0.6"
+     inkscape:zoom="2.0000001"
+     inkscape:cx="-12"
+     inkscape:cy="43.249999"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="742"
+     inkscape:window-y="1432"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g5-8"
+     inkscape:export-bgcolor="#ffffff00">
+    <sodipodi:guide
+       position="0,99.999998"
+       orientation="0,37.795276"
+       inkscape:locked="true"
+       id="guide12" />
+    <sodipodi:guide
+       position="0,99.999998"
+       orientation="37.795276,0"
+       inkscape:locked="true"
+       id="guide13" />
+    <sodipodi:guide
+       position="0,99.999998"
+       orientation="0,-37.795276"
+       inkscape:locked="true"
+       id="guide14" />
+    <sodipodi:guide
+       position="0,99.999998"
+       orientation="-37.795276,0"
+       inkscape:locked="true"
+       id="guide15" />
+    <inkscape:grid
+       id="grid15"
+       units="mm"
+       originx="0"
+       originy="-2.184502e-08"
+       spacingx="1.25"
+       spacingy="1.2499999"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="4"
+       enabled="true"
+       visible="true"
+       snapvisiblegridlinesonly="true"
+       dotted="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1">
+    <inkscape:path-effect
+       effect="bool_op"
+       operand-path="#g4-7"
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1"
+       operation="diff"
+       swap-operands="false"
+       filltype-this="from-curve"
+       filter=""
+       filltype-operand="from-curve" />
+    <filter
+       id="selectable_hidder_filter"
+       width="1"
+       height="1"
+       x="0"
+       y="0"
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="LPE boolean visibility">
+      <feComposite
+         id="boolops_hidder_primitive"
+         result="composite1"
+         operator="arithmetic"
+         in2="SourceGraphic"
+         in="BackgroundImage" />
+    </filter>
+    <inkscape:path-effect
+       effect="bool_op"
+       operand-path=""
+       id="path-effect1"
+       is_visible="true"
+       lpeversion="1"
+       operation="inters"
+       swap-operands="false"
+       filltype-this="from-curve"
+       filter=""
+       filltype-operand="from-curve" />
+  </defs>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-1.2499999,-1.2499998)">
+    <g
+       id="g5-8"
+       transform="translate(-3.7500005,-3.7500004)"
+       inkscape:label="Zane Black">
+      <path
+         style="font-variation-settings:'opsz' 36, 'wght' 700;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke-width:3.17512;stroke-dasharray:none;stroke-opacity:0.371002"
+         d="M 15.525391,10 10,15.525391 V 32.105469 L 14.144531,36.25 H 30.724609 L 36.25,30.724609 V 14.144531 L 32.105469,10 Z M 16.25,11.25 H 30 l -5,5 H 11.25 Z m 15,0 L 35,15 20,30 h 15 l -5,5 H 15 l -3.75,-3.75 z"
+         id="path1-5"
+         sodipodi:nodetypes="ccccccccc"
+         inkscape:export-filename="Zane-Black-Render.svg"
+         inkscape:export-xdpi="96"
+         inkscape:export-ydpi="96"
+         inkscape:path-effect="#path-effect2"
+         inkscape:original-d="m 15.526316,10 -5.526315,5.526316 v 16.578943 l 4.144737,4.144738 H 30.723683 L 36.25,30.723683 V 14.144737 L 32.105263,10 Z"
+         inkscape:label="Background" />
+      <g
+         id="g4-7"
+         style="fill:#ffffff;fill-opacity:1;filter:url(#selectable_hidder_filter)"
+         inkscape:label="Letter">
+        <path
+           style="font-variation-settings:'opsz' 36, 'wght' 700;fill:#ffffff;fill-opacity:1;stroke-width:2.873;stroke-opacity:0.371002"
+           d="m 11.25,16.249999 h 13.750001 l 5,-5.000001 -13.750001,1e-6 z"
+           id="path2-6"
+           sodipodi:nodetypes="ccccc" />
+        <path
+           id="path2-8-1"
+           style="font-variation-settings:'opsz' 36, 'wght' 700;fill:#ffffff;fill-opacity:1;stroke-width:2.873;stroke-opacity:0.371002"
+           d="m 31.250236,11.249906 -20.00033,20.00033 3.750159,3.749642 h 15.000118 l 4.999695,-4.999695 H 19.99976 L 34.999878,15.000065 Z" />
+      </g>
+    </g>
+  </g>
+</svg>
