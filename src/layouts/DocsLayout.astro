@@ -1,14 +1,14 @@
 ---
 import Base from './Base.astro';
-import { getCollection } from 'astro:content';
+import type { DocEntry } from '../lib/docs';
 
 interface Props {
 	title: string;
+	docs: DocEntry[];
 	headings?: any[];
 }
 
-const { title } = Astro.props;
-const docs = await getCollection('docs');
+const { title, docs } = Astro.props;
 const current = Astro.url.pathname.replace(/\/$/, '') || '/';
 const rootDoc = docs.find(d => d.id === 'docs');
 

@@ -1,16 +1,32 @@
 ---
-import { getCollection } from 'astro:content';
-import DocPage from '../../components/DocPage.astro';
+export const prerender = false;
 
-export async function getStaticPaths() {
-	const docs = await getCollection('docs');
-	return docs.map(doc => ({
-		params: { slug: doc.id === 'docs' ? undefined : doc.id.replace(/^docs\//, '') },
-		props: { doc },
-	}));
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { getNav, renderDoc } from '../../lib/docs';
+
+const slug = Astro.params.slug;
+
+const [nav, doc] = await Promise.all([getNav(), renderDoc(slug)]);
+
+if (!doc) {
+	Astro.response.status = 404;
 }
 
-const { doc } = Astro.props;
+// Let the CDN serve the rendered page and revalidate in the background, so
+// edits to the docs repo appear within the cache window without a redeploy.
+Astro.response.headers.set(
+	'Cache-Control',
+	'public, s-maxage=300, stale-while-revalidate=600'
+);
 ---
 
-<DocPage doc={doc} />
+<DocsLayout title={doc?.title ?? 'Not found'} docs={nav} headings={doc?.headings ?? []}>
+	{doc ? (
+		<div class="markdown" set:html={doc.html} />
+	) : (
+		<div class="markdown">
+			<h1>Page not found</h1>
+			<p>There is no doc at this address. Pick one from the sidebar.</p>
+		</div>
+	)}
+</DocsLayout>
