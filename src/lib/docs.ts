@@ -1,4 +1,5 @@
 import { createMarkdownProcessor, type MarkdownHeading } from '@astrojs/markdown-remark';
+import yaml from 'js-yaml';
 
 // ── Source repo ────────────────────────────────────────────────────────────
 //
@@ -51,23 +52,37 @@ function ghHeaders(): HeadersInit {
 }
 
 async function fetchRaw(path: string): Promise<string | null> {
-	const res = await fetch(`${RAW}/${path}`);
-	if (!res.ok) return null;
-	return res.text();
+	try {
+		const res = await fetch(`${RAW}/${path}`);
+		if (!res.ok) return null;
+		return await res.text();
+	} catch {
+		// Network failure: treated as "not found" so callers degrade gracefully
+		// rather than rejecting (e.g. one bad request in getNav's Promise.all).
+		return null;
+	}
 }
 
 // ── Frontmatter ────────────────────────────────────────────────────────────
 
-/** Minimal YAML frontmatter parser — the docs only use flat `key: value`. */
-function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
+/** Parse a leading YAML frontmatter block, returning its data and the body. */
+function parseFrontmatter(raw: string): { data: Record<string, unknown>; body: string } {
 	const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(raw);
 	if (!match) return { data: {}, body: raw };
-	const data: Record<string, string> = {};
-	for (const line of match[1].split(/\r?\n/)) {
-		const kv = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-		if (kv) data[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
+	try {
+		const data = yaml.load(match[1]);
+		return {
+			data: data && typeof data === 'object' ? (data as Record<string, unknown>) : {},
+			body: raw.slice(match[0].length),
+		};
+	} catch {
+		return { data: {}, body: raw.slice(match[0].length) };
 	}
-	return { data, body: raw.slice(match[0].length) };
+}
+
+/** Read a frontmatter value as a string, if it is one. */
+function str(value: unknown): string | undefined {
+	return typeof value === 'string' ? value : undefined;
 }
 
 function toEntry(path: string, title?: string, description?: string): DocEntry {
@@ -132,8 +147,8 @@ export async function getNav(): Promise<DocEntry[]> {
 	const nav = await Promise.all(
 		paths.map(async (path) => {
 			const raw = await fetchRaw(path);
-			const { data } = raw ? parseFrontmatter(raw) : { data: {} as Record<string, string> };
-			return toEntry(path, data.title, data.description);
+			const { data } = raw ? parseFrontmatter(raw) : { data: {} as Record<string, unknown> };
+			return toEntry(path, str(data.title), str(data.description));
 		})
 	);
 
@@ -158,8 +173,8 @@ export async function renderDoc(slug: string | undefined): Promise<RenderedDoc |
 		const result = await processor.render(body);
 		const fallback = path.replace(/\.(md|mdx)$/, '').split('/').pop() ?? 'Docs';
 		return {
-			title: data.title || fallback,
-			description: data.description,
+			title: str(data.title) || fallback,
+			description: str(data.description),
 			html: result.code,
 			headings: result.metadata.headings,
 		};
