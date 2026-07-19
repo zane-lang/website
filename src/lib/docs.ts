@@ -135,34 +135,33 @@ let navCache: { at: number; nav: DocEntry[] } | null = null;
 export async function getNav(): Promise<DocEntry[]> {
 	if (navCache && Date.now() - navCache.at < TTL) return navCache.nav;
 
-	let res: Response;
+	// Degrade gracefully on any failure — a network error, non-OK status, or
+	// invalid JSON. An empty sidebar beats a broken page, and individual docs
+	// still render (they don't depend on this listing).
 	try {
-		res = await fetch(TREE, { headers: ghHeaders() });
+		const res = await fetch(TREE, { headers: ghHeaders() });
+		if (!res.ok) return navCache?.nav ?? [];
+		const tree = (await res.json()) as { tree?: { path: string; type: string }[] };
+		if (!Array.isArray(tree.tree)) return navCache?.nav ?? [];
+
+		const nav = tree.tree
+			.filter((n) => n.type === 'blob')
+			.map((n) => n.path)
+			.filter((p) => /\.(md|mdx)$/.test(p))
+			.filter((p) => !/(^|\/)(README|LICENSE)/i.test(p))
+			.map((path) => toEntry(path))
+			.sort((a, b) => a.id.localeCompare(b.id));
+
+		navCache = { at: Date.now(), nav };
+		return nav;
 	} catch {
 		return navCache?.nav ?? [];
 	}
-	if (!res.ok) {
-		// Degrade gracefully: an empty sidebar is better than a broken page, and
-		// individual docs still render (they don't depend on this listing).
-		return navCache?.nav ?? [];
-	}
-	const tree = (await res.json()) as { tree: { path: string; type: string }[] };
-
-	const nav = tree.tree
-		.filter((n) => n.type === 'blob')
-		.map((n) => n.path)
-		.filter((p) => /\.(md|mdx)$/.test(p))
-		.filter((p) => !/(^|\/)(README|LICENSE)/i.test(p))
-		.map((path) => toEntry(path))
-		.sort((a, b) => a.id.localeCompare(b.id));
-
-	navCache = { at: Date.now(), nav };
-	return nav;
 }
 
 // ── Render a doc to HTML (cached) ───────────────────────────────────────────
 
-const docCache = new Map<string, { at: number; doc: RenderedDoc | null }>();
+const docCache = new Map<string, { at: number; doc: RenderedDoc }>();
 
 /**
  * Fetch and render the doc for a URL slug, straight from the raw CDN, and cache
@@ -191,6 +190,8 @@ export async function renderDoc(slug: string | undefined): Promise<RenderedDoc |
 		break;
 	}
 
-	docCache.set(key, { at: Date.now(), doc });
+	// Only cache successful renders — caching a `null` would turn a transient
+	// fetch failure into a TTL-long 404 for a doc that actually exists.
+	if (doc) docCache.set(key, { at: Date.now(), doc });
 	return doc;
 }
