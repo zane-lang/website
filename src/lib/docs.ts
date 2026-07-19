@@ -85,14 +85,22 @@ function str(value: unknown): string | undefined {
 	return typeof value === 'string' ? value : undefined;
 }
 
-function toEntry(path: string, title?: string, description?: string): DocEntry {
+/** Turn a filename stem into a display title, e.g. `getting-started` → `Getting Started`. */
+function titleFromPath(path: string): string {
+	const stem = path.replace(/\.(md|mdx)$/, '').split('/').pop() ?? path;
+	return stem
+		.split(/[-_]/)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+}
+
+function toEntry(path: string, title?: string): DocEntry {
 	const id = path.replace(/\.(md|mdx)$/, '');
-	const filename = id.split('/').pop() ?? id;
 	return {
 		id,
 		slug: id === 'docs' ? undefined : id.replace(/^docs\//, ''),
 		path,
-		data: { title: title || filename, ...(description ? { description } : {}) },
+		data: { title: title || titleFromPath(path) },
 	};
 }
 
@@ -119,8 +127,10 @@ function getProcessor() {
 let navCache: { at: number; nav: DocEntry[] } | null = null;
 
 /**
- * List every doc with its title, for the sidebar. One rate-limited tree-API
- * call plus one CDN raw fetch per file for the title; cached for `TTL`.
+ * List the docs for the sidebar from the repo file names alone — a single
+ * rate-limited tree-API call, no per-file content fetch. Titles are derived
+ * from the file names; the real frontmatter title is used for the page being
+ * viewed (see `renderDoc`). Cached for `TTL`.
  */
 export async function getNav(): Promise<DocEntry[]> {
 	if (navCache && Date.now() - navCache.at < TTL) return navCache.nav;
@@ -138,46 +148,49 @@ export async function getNav(): Promise<DocEntry[]> {
 	}
 	const tree = (await res.json()) as { tree: { path: string; type: string }[] };
 
-	const paths = tree.tree
+	const nav = tree.tree
 		.filter((n) => n.type === 'blob')
 		.map((n) => n.path)
 		.filter((p) => /\.(md|mdx)$/.test(p))
-		.filter((p) => !/(^|\/)(README|LICENSE)/i.test(p));
+		.filter((p) => !/(^|\/)(README|LICENSE)/i.test(p))
+		.map((path) => toEntry(path))
+		.sort((a, b) => a.id.localeCompare(b.id));
 
-	const nav = await Promise.all(
-		paths.map(async (path) => {
-			const raw = await fetchRaw(path);
-			const { data } = raw ? parseFrontmatter(raw) : { data: {} as Record<string, unknown> };
-			return toEntry(path, str(data.title), str(data.description));
-		})
-	);
-
-	nav.sort((a, b) => a.id.localeCompare(b.id));
 	navCache = { at: Date.now(), nav };
 	return nav;
 }
 
-// ── Render a doc to HTML ────────────────────────────────────────────────────
+// ── Render a doc to HTML (cached) ───────────────────────────────────────────
+
+const docCache = new Map<string, { at: number; doc: RenderedDoc | null }>();
 
 /**
- * Fetch and render the doc for a URL slug, straight from the raw CDN. Returns
- * `null` if no matching source file exists. Independent of the tree API, so
- * docs render even when the sidebar listing is unavailable.
+ * Fetch and render the doc for a URL slug, straight from the raw CDN, and cache
+ * the result (content included) for `TTL`. Returns `null` if no matching source
+ * file exists. Independent of the tree API, so docs render even when the sidebar
+ * listing is unavailable.
  */
 export async function renderDoc(slug: string | undefined): Promise<RenderedDoc | null> {
+	const key = slug ?? '';
+	const cached = docCache.get(key);
+	if (cached && Date.now() - cached.at < TTL) return cached.doc;
+
+	let doc: RenderedDoc | null = null;
 	for (const path of slugToCandidates(slug)) {
 		const raw = await fetchRaw(path);
 		if (raw === null) continue;
 		const { data, body } = parseFrontmatter(raw);
 		const processor = await getProcessor();
 		const result = await processor.render(body);
-		const fallback = path.replace(/\.(md|mdx)$/, '').split('/').pop() ?? 'Docs';
-		return {
-			title: str(data.title) || fallback,
+		doc = {
+			title: str(data.title) || titleFromPath(path),
 			description: str(data.description),
 			html: result.code,
 			headings: result.metadata.headings,
 		};
+		break;
 	}
-	return null;
+
+	docCache.set(key, { at: Date.now(), doc });
+	return doc;
 }
