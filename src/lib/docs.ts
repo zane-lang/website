@@ -125,38 +125,51 @@ function getProcessor() {
 // ── Navigation listing (cached) ────────────────────────────────────────────
 
 let navCache: { at: number; nav: DocEntry[] } | null = null;
+let inflightNav: Promise<DocEntry[]> | null = null;
 
 /**
  * List the docs for the sidebar from the repo file names alone — a single
  * rate-limited tree-API call, no per-file content fetch. Titles are derived
  * from the file names; the real frontmatter title is used for the page being
- * viewed (see `renderDoc`). Cached for `TTL`.
+ * viewed (see `renderDoc`). Cached for `TTL`, with concurrent cold-cache
+ * requests deduped onto one in-flight fetch so a burst can't stampede the
+ * rate-limited GitHub API.
  */
 export async function getNav(): Promise<DocEntry[]> {
 	if (navCache && Date.now() - navCache.at < TTL) return navCache.nav;
+	if (inflightNav) return inflightNav;
 
-	// Degrade gracefully on any failure — a network error, non-OK status, or
-	// invalid JSON. An empty sidebar beats a broken page, and individual docs
-	// still render (they don't depend on this listing).
-	try {
-		const res = await fetch(TREE, { headers: ghHeaders() });
-		if (!res.ok) return navCache?.nav ?? [];
-		const tree = (await res.json()) as { tree?: { path: string; type: string }[] };
-		if (!Array.isArray(tree.tree)) return navCache?.nav ?? [];
+	inflightNav = (async () => {
+		// Degrade gracefully on any failure — a network error, non-OK status, or
+		// invalid JSON. An empty sidebar beats a broken page, and individual docs
+		// still render (they don't depend on this listing).
+		try {
+			const res = await fetch(TREE, { headers: ghHeaders() });
+			if (!res.ok) return navCache?.nav ?? [];
+			const tree = (await res.json()) as { tree?: { path: string; type: string }[] };
+			if (!Array.isArray(tree.tree)) return navCache?.nav ?? [];
 
-		const nav = tree.tree
-			.filter((n) => n.type === 'blob')
-			.map((n) => n.path)
-			.filter((p) => /\.(md|mdx)$/.test(p))
-			.filter((p) => !/(^|\/)(README|LICENSE)/i.test(p))
-			.map((path) => toEntry(path))
-			.sort((a, b) => a.id.localeCompare(b.id));
+			const nav = tree.tree
+				.filter((n) => n.type === 'blob')
+				.map((n) => n.path)
+				// Only the doc root and the docs/ tree are routable, so keep the
+				// sidebar to those — stray root files (CONTRIBUTING.md, etc.) don't leak.
+				.filter((p) => p === 'docs.md' || p === 'docs.mdx' || p.startsWith('docs/'))
+				.filter((p) => /\.(md|mdx)$/.test(p))
+				.filter((p) => !/(^|\/)(README|LICENSE)/i.test(p))
+				.map((path) => toEntry(path))
+				.sort((a, b) => a.id.localeCompare(b.id));
 
-		navCache = { at: Date.now(), nav };
-		return nav;
-	} catch {
-		return navCache?.nav ?? [];
-	}
+			navCache = { at: Date.now(), nav };
+			return nav;
+		} catch {
+			return navCache?.nav ?? [];
+		} finally {
+			inflightNav = null;
+		}
+	})();
+
+	return inflightNav;
 }
 
 // ── Render a doc to HTML (cached) ───────────────────────────────────────────
@@ -179,15 +192,20 @@ export async function renderDoc(slug: string | undefined): Promise<RenderedDoc |
 		const raw = await fetchRaw(path);
 		if (raw === null) continue;
 		const { data, body } = parseFrontmatter(raw);
-		const processor = await getProcessor();
-		const result = await processor.render(body);
-		doc = {
-			title: str(data.title) || titleFromPath(path),
-			description: str(data.description),
-			html: result.code,
-			headings: result.metadata.headings,
-		};
-		break;
+		try {
+			const processor = await getProcessor();
+			const result = await processor.render(body);
+			doc = {
+				title: str(data.title) || titleFromPath(path),
+				description: str(data.description),
+				html: result.code,
+				headings: result.metadata.headings,
+			};
+			break;
+		} catch {
+			// A malformed doc shouldn't 500 the page — skip it (router shows 404).
+			continue;
+		}
 	}
 
 	// Only cache successful renders — caching a `null` would turn a transient
