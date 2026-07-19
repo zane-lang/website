@@ -46,8 +46,8 @@ const current = Astro.url.pathname;
 
 	const update = () => {
 		const isDark = html.dataset.theme === 'dark';
-		btn?.querySelector('.icon-sun')?.style.setProperty('display', isDark ? 'block' : 'none');
-		btn?.querySelector('.icon-moon')?.style.setProperty('display', isDark ? 'none' : 'block');
+		btn?.querySelector<HTMLElement>('.icon-sun')?.style.setProperty('display', isDark ? 'block' : 'none');
+		btn?.querySelector<HTMLElement>('.icon-moon')?.style.setProperty('display', isDark ? 'none' : 'block');
 	};
 
 	update();
