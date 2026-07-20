@@ -3,8 +3,12 @@
 	"type": "module",
 	"version": "0.0.1",
 	"scripts": {
+		"sync:docs": "node scripts/fetch-docs.mjs",
+		"predev": "node scripts/fetch-docs.mjs --skip-if-exists",
 		"dev": "astro dev",
+		"prestart": "node scripts/fetch-docs.mjs --skip-if-exists",
 		"start": "astro dev",
+		"prebuild": "node scripts/fetch-docs.mjs",
 		"build": "astro build",
 		"preview": "astro preview",
 		"astro": "astro"
