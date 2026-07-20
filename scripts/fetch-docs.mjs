@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 const repository = 'zane-lang/docs';
 const ref = process.env.ZANE_DOCS_REF || 'main';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const destination = join(root, 'src/content/docs');
+const contentDirectory = join(root, 'src/content');
+const destination = join(contentDirectory, 'docs');
 
 if (process.argv.includes('--skip-if-exists')) {
 	try {
@@ -16,18 +17,19 @@ if (process.argv.includes('--skip-if-exists')) {
 	} catch {}
 }
 
-const workDirectory = await mkdtemp(join(root, 'src/content/.docs-'));
+await mkdir(contentDirectory, { recursive: true });
+const workDirectory = await mkdtemp(join(contentDirectory, '.docs-'));
 const archive = join(workDirectory, 'docs.tar.gz');
 const extracted = join(workDirectory, 'extracted');
 
 try {
 	const response = await fetch(
-		`https://api.github.com/repos/${repository}/tarball/${encodeURIComponent(ref)}`,
+		`https://github.com/${repository}/archive/${encodeURIComponent(ref)}.tar.gz`,
 		{
 			headers: {
-				Accept: 'application/vnd.github+json',
 				'User-Agent': 'zane-lang-website',
 			},
+			signal: AbortSignal.timeout(30_000),
 		},
 	);
 
