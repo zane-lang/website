@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -7,6 +7,15 @@ const repository = 'zane-lang/docs';
 const ref = process.env.ZANE_DOCS_REF || 'main';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const destination = join(root, 'src/content/docs');
+
+if (process.argv.includes('--skip-if-exists')) {
+	try {
+		await access(join(destination, 'README.md'));
+		console.log('Docs already exist, skipping download.');
+		process.exit(0);
+	} catch {}
+}
+
 const workDirectory = await mkdtemp(join(root, 'src/content/.docs-'));
 const archive = join(workDirectory, 'docs.tar.gz');
 const extracted = join(workDirectory, 'extracted');
@@ -40,7 +49,7 @@ try {
 		throw new Error(result.stderr.trim() || `tar exited with status ${result.status}`);
 	}
 
-	await readFile(join(extracted, 'README.md'));
+	await access(join(extracted, 'README.md'));
 	await rm(destination, { recursive: true, force: true });
 	await rename(extracted, destination);
 	console.log(`Downloaded ${repository}@${ref} to src/content/docs`);

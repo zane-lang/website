@@ -4,9 +4,9 @@
 	"version": "0.0.1",
 	"scripts": {
 		"sync:docs": "node scripts/fetch-docs.mjs",
-		"predev": "npm run sync:docs",
+		"predev": "npm run sync:docs -- --skip-if-exists",
 		"dev": "astro dev",
-		"prestart": "npm run sync:docs",
+		"prestart": "npm run sync:docs -- --skip-if-exists",
 		"start": "astro dev",
 		"prebuild": "npm run sync:docs",
 		"build": "astro build",
