@@ -1,7 +1,10 @@
-import { spawnSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { access, mkdtemp, mkdir, rename, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify(execFile);
 
 const repository = 'https://github.com/zane-lang/docs.git';
 const ref = process.env.ZANE_DOCS_REF || 'main';
@@ -22,21 +25,19 @@ const workDirectory = await mkdtemp(join(contentDirectory, '.docs-'));
 const checkout = join(workDirectory, 'checkout');
 
 try {
-	const result = spawnSync(
+	await execFileAsync(
 		'git',
 		['clone', '--depth=1', '--branch', ref, '--single-branch', repository, checkout],
-		{ encoding: 'utf8', timeout: 30_000 },
+		{ timeout: 30_000 },
 	);
-
-	if (result.error) throw result.error;
-	if (result.status !== 0) {
-		throw new Error(result.stderr.trim() || `git clone exited with status ${result.status}`);
-	}
 
 	await rm(join(checkout, '.git'), { recursive: true, force: true });
 	await rm(destination, { recursive: true, force: true });
 	await rename(checkout, destination);
 	console.log(`Cloned zane-lang/docs@${ref} to src/content/docs`);
+} catch (error) {
+	const stderr = typeof error?.stderr === 'string' ? error.stderr.trim() : '';
+	throw new Error(stderr || error?.message || 'Failed to clone documentation', { cause: error });
 } finally {
 	await rm(workDirectory, { recursive: true, force: true });
 }
