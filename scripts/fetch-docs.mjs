@@ -11,7 +11,7 @@ const destination = join(contentDirectory, 'docs');
 
 if (process.argv.includes('--skip-if-exists')) {
 	try {
-		await access(join(destination, 'README.md'));
+		await access(destination);
 		console.log('Docs already exist, skipping download.');
 		process.exit(0);
 	} catch {}
@@ -51,7 +51,6 @@ try {
 		throw new Error(result.stderr.trim() || `tar exited with status ${result.status}`);
 	}
 
-	await access(join(extracted, 'README.md'));
 	await rm(destination, { recursive: true, force: true });
 	await rename(extracted, destination);
 	console.log(`Downloaded ${repository}@${ref} to src/content/docs`);
