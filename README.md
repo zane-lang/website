@@ -11,7 +11,7 @@ the site starts or builds.
 
 ## Running it locally
 
-You need Node.js 22.12 or newer, and Git.
+You need Node.js 22.23.4 or newer, and Git.
 
 ```sh
 git clone https://github.com/zane-lang/website
