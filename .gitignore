@@ -24,3 +24,4 @@ pnpm-debug.log*
 # downloaded documentation
 src/content/docs/
 src/content/.docs-*/
+.env*
