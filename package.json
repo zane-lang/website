@@ -2,6 +2,9 @@
 	"name": "website",
 	"type": "module",
 	"version": "0.0.1",
+	"engines": {
+		"node": ">=22.23.4"
+	},
 	"scripts": {
 		"sync:docs": "node scripts/fetch-docs.mjs",
 		"predev": "node scripts/fetch-docs.mjs --skip-if-exists",
@@ -14,11 +17,11 @@
 		"astro": "astro"
 	},
 	"dependencies": {
-		"@astrojs/check": "^0.9.8",
-		"astro": "^6.0.1",
+		"@astrojs/check": "^0.9.12",
+		"astro": "^7.4.13",
 		"lucide-astro": "^0.556.0",
 		"sass": "^1.98.0",
-		"sharp": "^0.34.2",
+		"sharp": "^0.35.5",
 		"typescript": "^5.9.3"
 	}
 }
