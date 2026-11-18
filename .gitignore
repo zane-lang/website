@@ -20,3 +20,7 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 .vercel
+
+# downloaded documentation
+src/content/docs/
+src/content/.docs-*/

@@ -1,4 +1,0 @@
-[submodule "src/content/docs"]
-	path = src/content/docs
-	url = https://github.com/zane-lang/docs
-	branch = main
