@@ -31,4 +31,5 @@ and the next `npm run dev` downloads the docs.
 
 `just ship` deploys it to production, using [`just`](https://github.com/casey/just)
 and the [Vercel CLI](https://vercel.com/docs/cli). The production build fetches
-the newest docs itself.
+the newest docs itself: `vercel.json` sets its build command to `npm run build`, so
+the `prebuild` step runs.
