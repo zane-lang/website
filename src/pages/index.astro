@@ -71,19 +71,19 @@ Unit main() {
 
 		<section class="container points">
 			<div class="point">
-				<h3>Name first, then type</h3>
+				<h2>Name first, then type</h2>
 				<p>A variable reads <code>x Int</code> or <code>p Point(…)</code>; a function starts with what it returns, <code>Int steps(…)</code>.</p>
 			</div>
 			<div class="point">
-				<h3>Control flow is library code</h3>
+				<h2>Control flow is library code</h2>
 				<p><code>if</code>, <code>else</code> and loops are ordinary code from the <code>core</code> package, written in Zane. The language has no <code>if</code> keyword.</p>
 			</div>
 			<div class="point">
-				<h3>Calls say what they may do</h3>
+				<h2>Calls say what they may do</h2>
 				<p><code>p:steps()</code> only reads <code>p</code>, while <code>console!print(…)</code> may change its subject.</p>
 			</div>
 			<div class="point">
-				<h3>Capabilities are values</h3>
+				<h2>Capabilities are values</h2>
 				<p>The console is an object handed to you by the program, so code that has no access to it cannot print.</p>
 			</div>
 		</section>
@@ -232,7 +232,7 @@ Unit main() {
 		border-top: 2px solid var(--brand-gold);
 		padding-top: 1rem;
 
-		h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+		h2 { font-size: 1rem; margin-bottom: 0.5rem; }
 		p { font-size: 0.925rem; }
 	}
 

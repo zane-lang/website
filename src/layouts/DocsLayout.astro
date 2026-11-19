@@ -181,7 +181,7 @@ const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourceP
 			const offset = 120;
 			let active = targets[0];
 			for (const t of targets) if (t.getBoundingClientRect().top - offset <= 0) active = t;
-			for (const a of links) a.classList.toggle('active', a.hash.slice(1) === active.id);
+			for (const a of links) a.classList.toggle('active', decodeURIComponent(a.hash.slice(1)) === active.id);
 		};
 		addEventListener('scroll', update, { passive: true });
 		update();

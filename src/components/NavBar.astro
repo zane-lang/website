@@ -53,6 +53,7 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 	btn?.addEventListener('click', () => {
 		const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
 		html.setAttribute('data-theme', next);
+		html.setAttribute('data-theme-locked', '');
 		try { localStorage.setItem('theme', next); } catch {}
 	});
 </script>

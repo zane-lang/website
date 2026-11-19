@@ -21,10 +21,22 @@ const fullTitle = title && title !== site.name ? `${title} · ${site.name}` : si
 			(() => {
 				let theme;
 				try { theme = localStorage.getItem('theme'); } catch {}
-				if (theme !== 'light' && theme !== 'dark') {
-					theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+				if (theme === 'light' || theme === 'dark') {
+					document.documentElement.setAttribute('data-theme', theme);
+					return;
 				}
-				document.documentElement.setAttribute('data-theme', theme);
+				// No saved choice: follow the OS, also when it changes, until the
+				// theme toggle sets data-theme-locked.
+				const query = matchMedia('(prefers-color-scheme: light)');
+				const apply = () => {
+					if (document.documentElement.hasAttribute('data-theme-locked')) {
+						query.removeEventListener('change', apply);
+						return;
+					}
+					document.documentElement.setAttribute('data-theme', query.matches ? 'light' : 'dark');
+				};
+				apply();
+				query.addEventListener('change', apply);
 			})();
 		</script>
 		<meta charset="UTF-8" />
