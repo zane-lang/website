@@ -57,7 +57,8 @@ test('unlisted pages, missing link targets and missing indexes are reported', ()
 	const messages = map.problems.map((p) => `${p.level}: ${p.message}`);
 	assert.ok(messages.some((m) => m.startsWith('warning: spec/spec/draft.md is not linked')));
 	assert.ok(messages.some((m) => m.startsWith('error: docs/docs/tour/README.md links missing.md')));
-	assert.ok(messages.some((m) => m.startsWith('error: zane/docs/README.md is missing')));
+	const empty = buildSiteMap(mkdtempSync(join(tmpdir(), 'zane-empty-')));
+	assert.ok(empty.problems.some((p) => p.message.startsWith('zane/docs/README.md is missing')));
 });
 
 test('routes drop .md and README', () => {

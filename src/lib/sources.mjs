@@ -75,8 +75,11 @@ export const root = (() => {
 	return dir;
 })();
 
-/** Where fetch-sources.mjs puts each repository: src/content/repos/<repo>. */
-export const reposDir = join(root, 'src/content/repos');
+/**
+ * Where fetch-sources.mjs puts each repository: src/content/repos/<repo>, or
+ * ZANE_SITE_REPOS_DIR (the tests use a scratch folder).
+ */
+export const reposDir = process.env.ZANE_SITE_REPOS_DIR || join(root, 'src/content/repos');
 
 export const manifestPath = join(reposDir, 'manifest.json');
 
