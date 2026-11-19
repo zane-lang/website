@@ -29,16 +29,24 @@ export function lines(markdown) {
 	return out;
 }
 
+/** A code span: a run of backticks, its text, and a run of the same length. */
+const codeSpan = /(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g;
+
 /** Inline Markdown to plain text: code spans, emphasis, links, HTML tags. */
 export function plain(text) {
-	return text
+	// Code spans are set aside first, so that nothing inside them reads as emphasis.
+	const spans = [];
+	const held = text.replace(codeSpan, (_, _ticks, body) => `\u0000${spans.push(body.trim()) - 1}\u0000`);
+	return held
 		.replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
 		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
 		.replace(/\[([^\]]*)\]\[[^\]]*\]/g, '$1')
 		.replace(/<[^>]+>/g, '')
-		.replace(/`([^`]*)`/g, '$1')
-		.replace(/(\*\*|__)(.*?)\1/g, '$2')
-		.replace(/(\*|_)(.*?)\1/g, '$2')
+		.replace(/\*\*(.*?)\*\*/g, '$1')
+		.replace(/(?<![\p{L}\p{N}])__(.*?)__(?![\p{L}\p{N}])/gu, '$1')
+		.replace(/\*(.*?)\*/g, '$1')
+		.replace(/(?<![\p{L}\p{N}])_(.*?)_(?![\p{L}\p{N}])/gu, '$1')
+		.replace(/\u0000(\d+)\u0000/g, (_, i) => spans[Number(i)])
 		.replace(/\s+/g, ' ')
 		.trim();
 }
@@ -97,7 +105,9 @@ export function indexOutline(markdown) {
 			items.push({ type: 'group', title: plain(heading[1]) });
 			continue;
 		}
-		for (const m of text.matchAll(/(?<!!)\[(?:[^\]\\]|\\.)*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)) {
+		// A link shown inside a code span is text, not a link.
+		const prose = text.replace(codeSpan, (span) => ' '.repeat(span.length));
+		for (const m of prose.matchAll(/(?<!!)\[(?:[^\]\\]|\\.)*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)) {
 			items.push({ type: 'link', href: m[1] });
 		}
 	}

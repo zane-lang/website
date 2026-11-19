@@ -27,7 +27,12 @@ export function githubUrl(repo, repoPath, known) {
 	const clean = repoPath.replace(/\/+$/, '');
 	const isFile = known ? known === 'file' : clean !== '' && /\.[A-Za-z0-9]+$/.test(posix.basename(clean));
 	const kind = clean !== '' && isFile ? 'blob' : 'tree';
-	return `${github}/${repo}/${kind}/main${clean ? `/${clean}` : ''}`;
+	return `${github}/${repo}/${kind}/main${clean ? `/${encodePath(clean)}` : ''}`;
+}
+
+/** A decoded repository path as a URL path: each segment percent-encoded, so `#` or `?` in a name stays in it. */
+export function encodePath(repoPath) {
+	return repoPath.split('/').map(encodeURIComponent).join('/');
 }
 
 /** Where a link to a missing file points, so that the link check reports it. */
@@ -52,7 +57,7 @@ export function resolveHref(from, href, byFile, isMissing = () => false, kindOf 
 		const path = safeDecode(repoPath).replace(/\/+$/, '');
 		const route = publishedRoute(byFile, repo, path);
 		if (route) return route + query + hash;
-		return isMissing(repo, path) ? `${missingPrefix}/${repo}/${path}` : href;
+		return isMissing(repo, path) ? `${missingPrefix}/${repo}/${encodePath(path)}` : href;
 	}
 
 	if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//') || href.startsWith('/')) return href;
@@ -65,6 +70,6 @@ export function resolveHref(from, href, byFile, isMissing = () => false, kindOf 
 
 	const route = publishedRoute(byFile, from.repo, repoPath);
 	if (route) return route + query + hash;
-	if (isMissing(from.repo, repoPath)) return `${missingPrefix}/${from.repo}/${repoPath}`;
+	if (isMissing(from.repo, repoPath)) return `${missingPrefix}/${from.repo}/${encodePath(repoPath)}`;
 	return githubUrl(from.repo, repoPath, kindOf(from.repo, repoPath)) + query + hash;
 }

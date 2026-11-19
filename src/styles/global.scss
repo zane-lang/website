@@ -353,7 +353,8 @@ html { scrollbar-color: var(--border-strong) transparent; }
 	.code-block {
 		position: relative;
 
-		pre { margin: 0; }
+		// Room above the first line for the language label and Copy button.
+		pre { margin: 0; padding-top: 2.2rem; }
 	}
 
 	.code-block__tools {

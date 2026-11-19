@@ -33,13 +33,17 @@ export function routeForPath(source, repoPath) {
 	return routeOf(source) + (rel ? `/${rel}` : '');
 }
 
-function walkMarkdown(dir, prefix, out = []) {
+/** Every Markdown file under `dir`, following folder links but entering each real folder once. */
+function walkMarkdown(dir, prefix, out = [], seen = new Set()) {
+	const real = realpathSync(dir);
+	if (seen.has(real)) return out;
+	seen.add(real);
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
 		if (entry.name.startsWith('.')) continue;
 		const path = join(dir, entry.name);
 		const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
 		const isDir = entry.isDirectory() || (entry.isSymbolicLink() && statSync(path, { throwIfNoEntry: false })?.isDirectory());
-		if (isDir) walkMarkdown(path, rel, out);
+		if (isDir) walkMarkdown(path, rel, out, seen);
 		else if (/\.md$/i.test(entry.name)) out.push(rel);
 	}
 	return out;
@@ -94,6 +98,8 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 		}
 
 		const read = (repoPath) => readFileSync(join(repoDir, repoPath), 'utf8');
+		/** route → the file published there */
+		const routeOwners = new Map();
 		const pageNode = (repoPath) => {
 			const markdown = read(repoPath);
 			const node = {
@@ -107,6 +113,7 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 				children: [],
 			};
 			byFile.set(`${source.repo}:${repoPath}`, node);
+			routeOwners.set(node.route, repoPath);
 			return node;
 		};
 
@@ -125,6 +132,13 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 				// A link to a folder means that folder's index.
 				if (!/\.md$/i.test(resolved) && existsSync(join(repoDir, resolved, 'README.md'))) resolved = posix.join(resolved, 'README.md');
 				if (!resolved.startsWith(`${source.folder}/`) || !/\.md$/i.test(resolved)) continue;
+				if (!resolved.endsWith('.md')) {
+					problems.push({
+						level: 'error',
+						message: `${source.repo}/${repoPath} links ${item.href}: a published page's name ends in .md, in lower case.`,
+					});
+					continue;
+				}
 				if (byFile.has(`${source.repo}:${resolved}`)) continue;
 				if (!existsSync(join(repoDir, resolved))) {
 					problems.push({
@@ -133,7 +147,15 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 					});
 					continue;
 				}
-				const child = /(^|\/)README\.md$/i.test(resolved) ? visitIndex(resolved) : pageNode(resolved);
+				const owner = routeOwners.get(routeForPath(source, resolved));
+				if (owner) {
+					problems.push({
+						level: 'error',
+						message: `${source.repo}/${repoPath} links ${item.href}, which would be published at ${routeForPath(source, resolved)} like ${source.repo}/${owner}.`,
+					});
+					continue;
+				}
+				const child = /(^|\/)README\.md$/.test(resolved) ? visitIndex(resolved) : pageNode(resolved);
 				(group ?? node).children.push(child);
 			}
 			return node;

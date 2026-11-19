@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { reposDir } from './sources.mjs';
 
 export function sampleFrom(readme) {
-	const section = readme.split(/^## A taste of Zane[ \t]*$/m)[1];
+	const section = readme.replace(/\r\n?/g, '\n').split(/^## A taste of Zane[ \t]*$/m)[1];
 	const m = section?.match(/^```zane[ \t]*\n([\s\S]*?)\n```[ \t]*$/m);
 	if (!m) throw new Error('zane-lang/zane README.md: no ```zane example under "## A taste of Zane" for the home page');
 	return m[1];

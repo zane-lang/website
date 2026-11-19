@@ -13,7 +13,7 @@ import { existsSync, lstatSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { defaultRef, envName, github, keepsRef, manifestPath, repos, reposDir, root } from '../src/lib/sources.mjs';
+import { defaultRef, envName, github, keepsRef, manifestPath, removalDeletes, repos, reposDir, root } from '../src/lib/sources.mjs';
 import { buildSiteMap } from '../src/lib/site-map.mjs';
 
 const run = promisify(execFile);
@@ -49,6 +49,9 @@ async function useLocal(repo, localPath) {
 	const target = isAbsolute(localPath) ? localPath : resolve(root, localPath);
 	if (!existsSync(target)) throw new Error(`${envName(repo, 'PATH')}=${localPath}: no such directory`);
 	const destination = join(reposDir, repo);
+	if (removalDeletes(destination, target)) {
+		throw new Error(`${envName(repo, 'PATH')}=${localPath} is inside ${destination}, which fetching replaces: point it at a checkout elsewhere.`);
+	}
 	await removeEntry(destination);
 	// A junction needs no administrator rights on Windows; elsewhere the type is ignored.
 	await symlink(target, destination, process.platform === 'win32' ? 'junction' : 'dir');

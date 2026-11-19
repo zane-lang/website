@@ -1,8 +1,8 @@
 // The documentation the site publishes: one tab per source folder. Each folder
 // follows the layout in PUBLISHING.md. Plain JavaScript, so that the build
 // scripts and the Astro pages share one list.
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, lstatSync, realpathSync } from 'node:fs';
+import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const github = 'https://github.com/zane-lang';
@@ -96,4 +96,25 @@ export const envName = (repo, kind) => `ZANE_${repo.toUpperCase().replace(/[^A-Z
  */
 export function keepsRef(kept, ref) {
 	return kept?.kind === 'clone' && kept.ref === ref;
+}
+
+/**
+ * Whether linking `destination` to the local checkout `target` would delete it:
+ * the fetch removes a downloaded folder before linking, so a target that is that
+ * folder or lies inside it goes with it. A link is removed, not followed, so an
+ * existing link is always safe to replace.
+ * @param {string} destination  src/content/repos/<repo>
+ * @param {string} target  the checkout ZANE_<REPO>_PATH names
+ */
+export function removalDeletes(destination, target) {
+	let stat;
+	try {
+		stat = lstatSync(destination);
+	} catch {
+		return false;
+	}
+	if (stat.isSymbolicLink()) return false;
+	const dest = realpathSync(destination);
+	const real = realpathSync(target);
+	return real === dest || real.startsWith(dest + sep);
 }

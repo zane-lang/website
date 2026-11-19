@@ -49,6 +49,14 @@ const decode = (s) => {
 	}
 };
 
+/** An attribute value with its character references (&amp;, &#38;, &#x26;) decoded. */
+const unescape = (value) =>
+	value.replace(/&(?:#(\d+)|#x([0-9a-f]+)|(amp|lt|gt|quot|apos));/gi, (all, dec, hex, named) => {
+		if (named) return { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }[named.toLowerCase()];
+		const code = dec ? Number(dec) : parseInt(hex, 16);
+		return code <= 0x10ffff ? String.fromCodePoint(code) : all;
+	});
+
 // HTML comments hold no anchors and no links.
 const uncommented = (html) => html.replace(/<!--[\s\S]*?-->/g, '');
 // Content outside <pre> and <code> too, so that examples showing HTML are not read as links.
@@ -59,11 +67,16 @@ for (const file of htmlFiles(dist)) {
 	const html = readFileSync(file, 'utf8');
 	const body = markup(html);
 	// Attribute values in any quoting: Astro writes "…", but a page's own HTML may use '…'.
-	const value = (m) => m[1] ?? m[2] ?? m[3];
-	const ids = new Set([...uncommented(html).matchAll(/\s(?:id|name)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^"'\s>]+))/gi)].map((m) => decode(value(m))));
-	const links = [...body.matchAll(/<a\b[^>]*?\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^"'\s>]+))/gi)].map((m) =>
-		value(m).replaceAll('&amp;', '&'),
+	const value = (m) => unescape(m[1] ?? m[2] ?? m[3]);
+	const attribute = (name) => String.raw`\s${name}\s*=\s*(?:"([^"]*)"|'([^']*)'|([^"'\s>]+))`;
+	// A fragment names an element's id, or an <a>'s name; no other name attribute.
+	const ids = new Set(
+		[
+			...uncommented(html).matchAll(new RegExp(`<[a-z][^>]*?${attribute('id')}`, 'gi')),
+			...uncommented(html).matchAll(new RegExp(`<a\\b[^>]*?${attribute('name')}`, 'gi')),
+		].map(value),
 	);
+	const links = [...body.matchAll(new RegExp(`<a\\b[^>]*?${attribute('href')}`, 'gi'))].map(value);
 	const source = html.match(/<meta name="zane:source" content="([^"]+)"/)?.[1];
 	pages.set(file, { ids, links, source });
 }

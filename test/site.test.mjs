@@ -1,16 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { titleOf, descriptionOf, indexOutline, lines } from '../src/lib/markdown.mjs';
+import { titleOf, descriptionOf, indexOutline, lines, plain } from '../src/lib/markdown.mjs';
 import { buildSiteMap, sharedPrefix, routeForPath, locateFile } from '../src/lib/site-map.mjs';
 import { resolveHref, githubUrl } from '../src/lib/links.mjs';
 import { alertFrom, isMissing, kindOf } from '../src/plugins/zane-docs.mjs';
 import { sampleFrom } from '../src/lib/home.mjs';
-import { keepsRef, sources } from '../src/lib/sources.mjs';
+import { keepsRef, removalDeletes, sources } from '../src/lib/sources.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = join(here, 'fixtures/repos');
@@ -33,7 +33,8 @@ test('a description with no space to cut at is cut at the limit', () => {
 
 test('a malformed %-escape in a link does not stop the build', () => {
 	const from = { repo: 'spec', path: 'spec/foundations.md' };
-	assert.equal(resolveHref(from, 'bad%zz.md', map.byFile), 'https://github.com/zane-lang/spec/blob/main/spec/bad%zz.md');
+	// Left undecoded, `%zz` names a file called bad%zz.md, whose URL escapes the `%`.
+	assert.equal(resolveHref(from, 'bad%zz.md', map.byFile), 'https://github.com/zane-lang/spec/blob/main/spec/bad%25zz.md');
 	assert.equal(resolveHref(from, 'https://github.com/zane-lang/spec/blob/main/spec/%E0%A4%A.md', map.byFile),
 		'https://github.com/zane-lang/spec/blob/main/spec/%E0%A4%A.md');
 	assert.doesNotThrow(() => buildSiteMap(fixtures));
@@ -205,4 +206,102 @@ test('a kept download is reused only for the ref it was cloned from', () => {
 	assert.equal(keepsRef(kept, 'my-branch'), false, 'ZANE_SPEC_REF=my-branch npm run dev must fetch the branch');
 	assert.equal(keepsRef({ kind: 'local', path: '/x' }, 'main'), false);
 	assert.equal(keepsRef(undefined, 'main'), false);
+});
+
+test('a file name with # or ? keeps it in its GitHub URL', () => {
+	const from = { repo: 'spec', path: 'spec/foundations.md' };
+	assert.equal(resolveHref(from, 'draft%23notes.md?x=1#top', map.byFile),
+		'https://github.com/zane-lang/spec/blob/main/spec/draft%23notes.md?x=1#top');
+	assert.equal(githubUrl('spec', 'a b/c?.md'), 'https://github.com/zane-lang/spec/blob/main/a%20b/c%3F.md');
+});
+
+test('code spans keep their text, and underscores inside words are not emphasis', () => {
+	assert.equal(titleOf('# `parse_unsigned_int`\n'), 'parse_unsigned_int');
+	assert.equal(plain('snake_case_name and _emphasis_ and __strong__'), 'snake_case_name and emphasis and strong');
+	assert.equal(plain('``a `tick` b`` *x*'), 'a `tick` b x');
+});
+
+test('a link shown inside a code span is not an index link', () => {
+	const hrefs = indexOutline('Write `[Example](example.md)` to link; see [real](real.md) and ``[x](`y`.md)``.\n')
+		.filter((i) => i.type === 'link')
+		.map((i) => i.href);
+	assert.deepEqual(hrefs, ['real.md']);
+});
+
+test('the home sample reads a README with CRLF line endings', () => {
+	const readme = '# Zane\r\n\r\n## A taste of Zane\r\n\r\n```zane\r\npackage hello;\r\n```\r\n';
+	assert.equal(sampleFrom(readme), 'package hello;');
+});
+
+test('the link check reads character references, and names only on <a>', () => {
+	const dist = mkdtempSync(join(tmpdir(), 'zane-links-'));
+	const page = (route, body) => {
+		mkdirSync(join(dist, route), { recursive: true });
+		writeFileSync(join(dist, route, 'index.html'), `<html><head><meta name="description" content="x"></head><body>${body}</body></html>`);
+	};
+	const script = join(here, '../scripts/check-links.mjs');
+	page('/a', '<h2 id="a&amp;b">x</h2><a href="#a%26b">ok</a><a href="/a#a&#38;b">ok</a><a href="/a#a&#x26;b">ok</a><a name="old">x</a><a href="#old">ok</a>');
+	execFileSync('node', [script, dist]);
+	page('/b', '<a href="/a#description">a meta name is no anchor</a>');
+	const run = spawnSync('node', [script, dist], { encoding: 'utf8' });
+	assert.equal(run.status, 1);
+	assert.match(run.stderr, /\/a#description — no #description on \/a\//);
+});
+
+/** A copy of the fixtures with `change` applied to it. */
+function fixturesWith(change) {
+	const dir = mkdtempSync(join(tmpdir(), 'zane-fixtures-'));
+	cpSync(fixtures, dir, { recursive: true });
+	change(dir);
+	return dir;
+}
+
+test('a folder link that loops back is scanned once', () => {
+	const dir = fixturesWith((d) => symlinkSync(join(d, 'spec/spec'), join(d, 'spec/spec/loop'), 'dir'));
+	const errors = (map) => map.problems.filter((p) => p.level === 'error').map((p) => p.message);
+	assert.deepEqual(errors(buildSiteMap(dir)), errors(map), 'the loop adds no problem of its own');
+});
+
+test('two pages that would share a route are an error', () => {
+	const dir = fixturesWith((d) => {
+		mkdirSync(join(d, 'docs/docs/install'));
+		writeFileSync(join(d, 'docs/docs/install/README.md'), '# Install too\n');
+		writeFileSync(join(d, 'docs/docs/README.md'), '# Learn\n\n- [Install](install.md)\n- [Again](install/README.md)\n');
+		writeFileSync(join(d, 'docs/docs/install.md'), '# Install\n');
+	});
+	const errors = buildSiteMap(dir).problems.filter((p) => p.level === 'error').map((p) => p.message);
+	assert.equal(errors.length, 1);
+	assert.match(errors[0], /install\/README\.md, which would be published at \/docs\/install like docs\/docs\/install\.md/);
+});
+
+test('an index link to a .MD file is an error, not a page with no route', () => {
+	const dir = fixturesWith((d) => {
+		writeFileSync(join(d, 'docs/docs/README.md'), '# Learn\n\n- [Install](Install.MD)\n');
+		writeFileSync(join(d, 'docs/docs/Install.MD'), '# Install\n');
+	});
+	const errors = buildSiteMap(dir).problems.filter((p) => p.level === 'error').map((p) => p.message);
+	assert.equal(errors.length, 1);
+	assert.match(errors[0], /ends in \.md, in lower case/);
+});
+
+test('a local checkout inside the download folder is refused, not deleted', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'zane-repos-'));
+	const downloaded = join(dir, 'docs');
+	mkdirSync(join(downloaded, 'docs'), { recursive: true });
+	assert.equal(removalDeletes(downloaded, downloaded), true);
+	assert.equal(removalDeletes(downloaded, join(downloaded, 'docs')), true);
+	const elsewhere = mkdtempSync(join(tmpdir(), 'zane-checkout-'));
+	assert.equal(removalDeletes(downloaded, elsewhere), false);
+	const linked = join(dir, 'spec');
+	symlinkSync(elsewhere, linked, 'dir');
+	assert.equal(removalDeletes(linked, elsewhere), false, 'replacing a link leaves its target');
+	assert.equal(removalDeletes(join(dir, 'none'), elsewhere), false);
+
+	const run = spawnSync('node', [join(here, '../scripts/fetch-sources.mjs')], {
+		encoding: 'utf8',
+		env: { ...process.env, ZANE_SITE_REPOS_DIR: dir, ZANE_DOCS_PATH: downloaded, ZANE_SPEC_PATH: elsewhere, ZANE_ZANE_PATH: elsewhere, ZANE_STD_PATH: elsewhere, ZANE_COMPILER_PATH: elsewhere },
+	});
+	assert.equal(run.status, 1);
+	assert.match(run.stderr, /ZANE_DOCS_PATH=.* is inside .*, which fetching replaces/);
+	assert.ok(existsSync(join(downloaded, 'docs')), 'the checkout is still there');
 });
