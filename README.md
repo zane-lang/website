@@ -29,6 +29,18 @@ A clone from before the docs were fetched this way still has the old submodule
 checkout in `src/content/docs`. Save any changes made there, delete the folder,
 and the next `npm run dev` downloads the docs.
 
+## Styling and code highlighting
+
+Code blocks marked ` ```zane ` are highlighted with
+[`src/syntax/zane.tmLanguage.json`](src/syntax/zane.tmLanguage.json), a
+TextMate grammar whose keywords follow the compiler's generated
+`editors/typst/Zane.sublime-syntax`; update it when the lexicon changes. Code
+colours, like the rest of the palette (maroon `#653f3f` and gold `#d5aa41`, from
+the [logo](https://github.com/zane-lang/logos)), are tokens in
+[`src/styles/global.scss`](src/styles/global.scss).
+
+## Deploying
+
 `just ship` deploys it to production, using [`just`](https://github.com/casey/just)
 and the [Vercel CLI](https://vercel.com/docs/cli). The production build fetches
 the newest docs itself: `vercel.json` sets its build command to `npm run build`, so

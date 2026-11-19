@@ -3,51 +3,57 @@ import "../styles/defaults.scss";
 import "../styles/global.scss";
 import { site } from '../config.ts';
 import NavBar from '../components/NavBar.astro';
+import Footer from '../components/Footer.astro';
 
 interface Props {
 	title?: string;
+	description?: string;
 }
 
-const { title = site.name } = Astro.props;
+const { title, description = site.description } = Astro.props;
+const fullTitle = title && title !== site.name ? `${title} · ${site.name}` : site.name;
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<script is:inline>
-			const saved = localStorage.getItem('theme') ?? 'dark';
-			document.documentElement.setAttribute('data-theme', saved);
+			(() => {
+				let theme;
+				try { theme = localStorage.getItem('theme'); } catch {}
+				if (theme === 'light' || theme === 'dark') {
+					document.documentElement.setAttribute('data-theme', theme);
+					return;
+				}
+				// No saved choice: follow the OS, also when it changes, until the
+				// theme toggle sets data-theme-locked.
+				const query = matchMedia('(prefers-color-scheme: light)');
+				const apply = () => {
+					if (document.documentElement.hasAttribute('data-theme-locked')) {
+						query.removeEventListener('change', apply);
+						return;
+					}
+					document.documentElement.setAttribute('data-theme', query.matches ? 'light' : 'dark');
+				};
+				apply();
+				query.addEventListener('change', apply);
+			})();
 		</script>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" href={site.icon} />
-		<title>{title}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#653f3f" />
+		<meta property="og:title" content={fullTitle} />
+		<meta property="og:description" content={description} />
+		<link rel="icon" href={site.icon} type="image/svg+xml" />
+		<title>{fullTitle}</title>
 	</head>
 	<body>
-		<NavBar logo={site.name} links={[
-			{
-				label: "Docs",
-				href: "/docs"
-			}
+		<NavBar links={[
+			{ label: "Docs", href: "/docs" },
+			{ label: "Specification", href: "https://github.com/zane-lang/spec" },
 		]} />
-		<div class="page-layout">
-			<slot name="sidebar" />
-			<main class="main">
-				<slot />
-			</main>
-		</div>
+		<slot />
+		<Footer />
 	</body>
 </html>
-
-<style is:global lang="scss">
-	.page-layout:has(aside) {
-		display: grid;
-		grid-template-columns: 220px 1fr;
-	}
-
-	.main {
-		max-width: 1100px;
-		margin: 0 auto;
-		padding: 3rem 1.5rem;
-	}
-</style>

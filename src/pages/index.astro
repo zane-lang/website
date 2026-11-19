@@ -1,9 +1,266 @@
 ---
+import { Code } from 'astro:components';
+import { ArrowRight, BookOpen, FileText, Terminal, Github } from 'lucide-astro';
 import Base from '../layouts/Base.astro';
-import Paragraph from '../components/Paragraph.astro'
+import Button from '../components/Button.astro';
+import Card from '../components/Card.astro';
+import zane from '../syntax/zane.tmLanguage.json';
+
+// The sample from the zane-lang/zane README ("A taste of Zane").
+const sample = `package hello;
+
+import core$;
+
+type Point = struct {
+	x Int;
+	y Int;
+}
+Point(x Int, y Int) => init{ x; y; }
+
+/// A method: \`this\` is the point it is called on.
+Int steps(this Point) => this.x + this.y;
+
+Unit main() {
+	console Console(@program$console);
+	console!print("Hello, Zane!");
+
+	p Point(Int(3), Int(4));
+	far Bool = if(Int(5) < p:steps()) {
+		console!print("far away");
+	}
+	far:else() {
+		console!print("close by");
+	}
+	return Unit();
+}`;
 ---
 
 <Base>
-	<h1>The Zane Programming Language</h1>
-	<Paragraph>Under developement. Head over to <a href="https://github.com/zane-lang" target="_blank" rel="noopener">https://github.com/zane-lang</a>.</Paragraph>
+	<main>
+		<section class="hero">
+			<div class="container hero__inner">
+				<div class="hero__text">
+					<p class="hero__eyebrow">
+						<span class="dot" aria-hidden="true"></span>
+						Experimental · major version 0
+					</p>
+					<h1>The Zane<br />programming language</h1>
+					<p class="hero__lede">
+						A systems language whose compiler keeps the intent you write down and
+						turns strict rules into speed: deterministic memory management with <strong>no
+						garbage collector</strong> and <strong>no lifetime annotations</strong>.
+					</p>
+					<div class="hero__actions">
+						<Button href="/docs" size="lg">Read the docs <ArrowRight size={17} /></Button>
+						<Button href="https://github.com/zane-lang/zane" variant="ghost" size="lg" target="_blank" rel="noopener">
+							<Github size={17} /> Get started
+						</Button>
+					</div>
+				</div>
+				<div class="hero__code">
+					<div class="window">
+						<div class="window__bar">
+							<span class="window__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+							<span class="window__name">hello.zn</span>
+						</div>
+						<Code code={sample} lang={zane as any} theme="css-variables" />
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="container points">
+			<div class="point">
+				<h2>Name first, then type</h2>
+				<p>A variable reads <code>x Int</code> or <code>p Point(…)</code>; a function starts with what it returns, <code>Int steps(…)</code>.</p>
+			</div>
+			<div class="point">
+				<h2>Control flow is library code</h2>
+				<p><code>if</code>, <code>else</code> and loops are ordinary code from the <code>core</code> package, written in Zane. The language has no <code>if</code> keyword.</p>
+			</div>
+			<div class="point">
+				<h2>Calls say what they may do</h2>
+				<p><code>p:steps()</code> only reads <code>p</code>, while <code>console!print(…)</code> may change its subject.</p>
+			</div>
+			<div class="point">
+				<h2>Capabilities are values</h2>
+				<p>The console is an object handed to you by the program, so code that has no access to it cannot print.</p>
+			</div>
+		</section>
+
+		<section class="container start">
+			<h2>Start here</h2>
+			<div class="start__grid">
+				<Card href="https://github.com/zane-lang/zane" target="_blank" rel="noopener">
+					<Terminal size={22} class="start__icon" />
+					<h3>Install <code>zane</code></h3>
+					<p>The command that creates projects, fetches dependencies, installs compilers and builds, runs and tests programs.</p>
+				</Card>
+				<Card href="/docs">
+					<BookOpen size={22} class="start__icon" />
+					<h3>Read the docs</h3>
+					<p>Guides and reference pages for working with Zane and its tools.</p>
+				</Card>
+				<Card href="https://github.com/zane-lang/spec" target="_blank" rel="noopener">
+					<FileText size={22} class="start__icon" />
+					<h3>The specification</h3>
+					<p>The reference for the language itself, with the history of its design decisions.</p>
+				</Card>
+			</div>
+		</section>
+	</main>
 </Base>
+
+<style lang="scss">
+	main { flex: 1; }
+
+	.hero {
+		position: relative;
+		overflow: hidden;
+		border-bottom: 1px solid var(--border);
+		background:
+			radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--brand-maroon) 35%, transparent), transparent 70%),
+			radial-gradient(40rem 25rem at 0% 110%, color-mix(in srgb, var(--brand-gold) 10%, transparent), transparent 70%);
+
+		&__inner {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+			gap: 3.5rem;
+			align-items: center;
+			padding-top: 5rem;
+			padding-bottom: 5rem;
+		}
+
+		&__eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.8rem;
+			font-weight: 500;
+			color: var(--text-muted);
+			border: 1px solid var(--border);
+			background: var(--surface);
+			border-radius: 99px;
+			padding: 0.25rem 0.75rem;
+			margin-bottom: 1.5rem;
+
+			.dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--brand-gold);
+				box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-gold) 25%, transparent);
+			}
+		}
+
+		h1 {
+			font-size: clamp(2.4rem, 5.5vw, 3.75rem);
+			line-height: 1.05;
+		}
+
+		&__lede {
+			margin-top: 1.5rem;
+			font-size: 1.125rem;
+			line-height: 1.7;
+			max-width: 34rem;
+		}
+
+		&__actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+			margin-top: 2rem;
+		}
+	}
+
+	.window {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		background: var(--code-bg);
+		box-shadow:
+			0 1px 0 rgb(255 255 255 / 0.04) inset,
+			0 30px 60px -20px rgb(0 0 0 / 0.35);
+		overflow: hidden;
+
+		&__bar {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			padding: 0.65rem 1rem;
+			border-bottom: 1px solid var(--border);
+			background: var(--surface-2);
+		}
+
+		&__dots {
+			display: flex;
+			gap: 6px;
+
+			i {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background: var(--border-strong);
+			}
+			i:first-child { background: var(--brand-maroon); }
+			i:nth-child(2) { background: var(--brand-gold); }
+		}
+
+		&__name {
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			color: var(--text-muted);
+		}
+
+		:global(pre) {
+			border: none;
+			border-radius: 0;
+			margin: 0;
+			font-size: 0.8rem;
+			padding: 1.1rem 1.25rem;
+		}
+	}
+
+	.points {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 2rem;
+		padding-top: 4rem;
+		padding-bottom: 1rem;
+	}
+
+	.point {
+		border-top: 2px solid var(--brand-gold);
+		padding-top: 1rem;
+
+		h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+		p { font-size: 0.925rem; }
+	}
+
+	.start {
+		padding-top: 4rem;
+		padding-bottom: 5rem;
+
+		h2 { margin-bottom: 1.5rem; }
+
+		&__grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 1rem;
+		}
+
+		h3 { font-size: 1.05rem; margin: 0.9rem 0 0.4rem; }
+		p { font-size: 0.925rem; }
+		:global(.start__icon) { color: var(--accent); }
+	}
+
+	@media (max-width: 960px) {
+		.hero__inner { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; padding-top: 3rem; padding-bottom: 3rem; }
+		.points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		.start__grid { grid-template-columns: 1fr; }
+	}
+
+	@media (max-width: 560px) {
+		.points { grid-template-columns: 1fr; gap: 1.5rem; }
+		.hero__actions :global(.btn) { flex: 1; justify-content: center; }
+	}
+</style>

@@ -1,5 +1,6 @@
 ---
 import { Sun, Moon, Github } from 'lucide-astro';
+import { site } from '../config.ts';
 
 interface NavLink {
 	label: string;
@@ -7,34 +8,39 @@ interface NavLink {
 }
 interface Props {
 	links?: NavLink[];
-	logo?: string;
 }
-const { links = [], logo = 'Zane' } = Astro.props;
-const current = Astro.url.pathname;
+const { links = [] } = Astro.props;
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => current === href || current.startsWith(href + '/');
+const isExternal = (href: string) => /^https?:\/\//.test(href);
 ---
 
 <header class="nav">
-	<div class="nav__inner">
-		<a href="/" class="nav__logo">{logo}</a>
-		<nav class="nav__links">
+	<div class="container nav__inner">
+		<a href="/" class="nav__logo" aria-label={`${site.name} home`}>
+			<img src={site.logo} alt="" width="26" height="26" />
+			<span>{site.name}</span>
+		</a>
+		<nav class="nav__links" aria-label="Main">
 			{links.map((link) => (
-
-			<a
-				href={link.href}
-				class={`nav__link ${current === link.href ? 'nav__link--active' : ''}`}
-			>
-			{link.label}
-			</a>
+				<a
+					href={link.href}
+					class:list={['nav__link', { 'nav__link--active': isActive(link.href) }]}
+					aria-current={isActive(link.href) ? 'page' : undefined}
+					{...(isExternal(link.href) ? { target: '_blank', rel: 'noopener' } : {})}
+				>
+					{link.label}
+				</a>
 			))}
 		</nav>
 		<div class="nav__actions">
 			<slot name="actions" />
-			<a href="https://github.com/zane-lang" class="nav__theme" aria-label="GitHub" target="_blank" rel="noopener">
-				<Github size={16} />
+			<a href={site.github} class="nav__icon" aria-label="Zane on GitHub" target="_blank" rel="noopener">
+				<Github size={17} />
 			</a>
-			<button id="theme-toggle" class="nav__theme" aria-label="Toggle theme">
-				<Sun size={16} class="icon-sun" />
-				<Moon size={16} class="icon-moon" />
+			<button id="theme-toggle" class="nav__icon" type="button" aria-label="Toggle colour theme">
+				<Sun size={17} class="icon-sun" />
+				<Moon size={17} class="icon-moon" />
 			</button>
 		</div>
 	</div>
@@ -44,95 +50,107 @@ const current = Astro.url.pathname;
 	const btn = document.getElementById('theme-toggle');
 	const html = document.documentElement;
 
-	const update = () => {
-		const isDark = html.dataset.theme === 'dark';
-		btn?.querySelector<HTMLElement | SVGElement>('.icon-sun')?.style.setProperty('display', isDark ? 'block' : 'none');
-		btn?.querySelector<HTMLElement | SVGElement>('.icon-moon')?.style.setProperty('display', isDark ? 'none' : 'block');
-	};
-
-	update();
 	btn?.addEventListener('click', () => {
 		const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
 		html.setAttribute('data-theme', next);
-		localStorage.setItem('theme', next);
-		update();
+		html.setAttribute('data-theme-locked', '');
+		try { localStorage.setItem('theme', next); } catch {}
 	});
 </script>
 
 <style lang="scss">
-	$gold: #8f7f58;
-
 	.nav {
 		position: sticky;
 		top: 0;
 		z-index: 100;
-		background: color-mix(in srgb, #{$gold} 8%, var(--bg));
-		border-bottom: 1px solid color-mix(in srgb, #{$gold} 25%, transparent);
-		backdrop-filter: blur(12px);
+		background: color-mix(in srgb, var(--bg) 92%, transparent);
+		border-bottom: 1px solid var(--border);
+		backdrop-filter: saturate(1.4) blur(12px);
+		-webkit-backdrop-filter: saturate(1.4) blur(12px);
+
+		// A thin brand stripe along the top edge.
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0 0 auto 0;
+			height: 3px;
+			background: linear-gradient(90deg, var(--brand-maroon), var(--brand-gold));
+		}
 
 		&__inner {
-			max-width: 1100px;
-			margin: 0 auto;
-			padding: 0 1.5rem;
-			height: 56px;
+			height: var(--nav-height);
 			display: flex;
 			align-items: center;
-			gap: 2rem;
+			gap: 1.5rem;
 		}
 
 		&__logo {
-			font-weight: 600;
-			font-size: 1.1rem;
-			color: #{$gold};
-			text-decoration: none;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.6rem;
+			font-weight: 650;
+			font-size: 1.15rem;
+			letter-spacing: -0.02em;
+			color: var(--text);
 			flex-shrink: 0;
-			transition: color 0.15s ease;
 
-			&:hover { color: var(--gold-hover); }
+			&:hover { color: var(--text); }
+			img { transition: transform 0.2s ease; }
+			&:hover img { transform: rotate(-8deg); }
 		}
 
 		&__links {
 			display: flex;
 			gap: 0.25rem;
-			flex: 1;
+			min-width: 0;
 		}
 
 		&__link {
 			font-size: 0.9rem;
 			color: var(--text-muted);
-			text-decoration: none;
-			padding: 0.35rem 0.75rem;
-			border-radius: 6px;
-			transition: all 0.15s ease;
+			padding: 0.35rem 0.7rem;
+			border-radius: var(--radius-sm);
+			white-space: nowrap;
+			transition: color 0.15s ease, background 0.15s ease;
 
 			&:hover { color: var(--text); background: var(--bg-subtle); }
-			&--active { color: var(--text); background: var(--bg-subtle); }
+			&--active { color: var(--text); background: var(--surface-2); }
 		}
 
 		&__actions {
 			display: flex;
 			align-items: center;
-			gap: 0.5rem;
+			gap: 0.4rem;
 			margin-left: auto;
 		}
 
-		&__theme {
-			background: color-mix(in srgb, #{$gold} 12%, transparent);
-			border: 1px solid color-mix(in srgb, #{$gold} 40%, transparent);
-			border-radius: 6px;
-			width: 32px;
-			height: 32px;
-			cursor: pointer;
-			color: #{$gold};
-			transition: all 0.15s ease;
+		&__icon {
+			width: 36px;
+			height: 36px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			background: transparent;
+			border: 1px solid var(--border);
+			border-radius: var(--radius-sm);
+			color: var(--text-muted);
+			cursor: pointer;
+			transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 
 			&:hover {
-				background: color-mix(in srgb, #{$gold} 25%, transparent);
-				border-color: #{$gold};
+				color: var(--accent);
+				border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+				background: var(--accent-soft);
 			}
 		}
+
+		@media (max-width: 600px) {
+			&__inner { gap: 0.75rem; }
+			&__logo span { display: none; }
+			&__link { padding: 0.35rem 0.5rem; }
+		}
 	}
+
+	:global([data-theme="dark"] #theme-toggle .icon-moon),
+	:global([data-theme="light"] #theme-toggle .icon-sun) { display: none; }
 </style>
