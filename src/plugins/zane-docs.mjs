@@ -1,7 +1,7 @@
 // A Sätteri HTML-tree plugin for pages fetched from the Zane repositories:
 // rewrites their links to site routes (src/lib/links.mjs) and renders GitHub
 // alerts (`> [!NOTE]` and the other four kinds) as callouts.
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveHref } from '../lib/links.mjs';
@@ -12,6 +12,16 @@ import { reposDir, sources } from '../lib/sources.mjs';
 export function isMissing(repo, repoPath, dir = reposDir) {
 	const fetched = sources.some((s) => s.repo === repo && (repoPath === s.folder || repoPath.startsWith(`${s.folder}/`)));
 	return fetched && !existsSync(join(dir, repo, repoPath));
+}
+
+/**
+ * What a path is in the fetched copy of a repository, or undefined when the copy
+ * lacks it. A sparse clone holds the repository's top-level files too, so a link
+ * to its LICENSE is known to be a file.
+ */
+export function kindOf(repo, repoPath, dir = reposDir) {
+	const stat = statSync(join(dir, repo, repoPath), { throwIfNoEntry: false });
+	return stat ? (stat.isDirectory() ? 'dir' : 'file') : undefined;
 }
 
 const alertKinds = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' };
@@ -50,7 +60,7 @@ export function zaneDocs(ctx) {
 				visit(node, visitCtx) {
 					const href = node.properties?.href;
 					if (!from || typeof href !== 'string') return;
-					const resolved = resolveHref(from, href, byFile, isMissing);
+					const resolved = resolveHref(from, href, byFile, isMissing, kindOf);
 					if (resolved !== href) visitCtx.setProperty(node, 'href', resolved);
 				},
 			},

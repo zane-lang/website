@@ -49,8 +49,10 @@ const decode = (s) => {
 	}
 };
 
-// Content outside <pre> and <code>, so that examples showing HTML are not read as links.
-const markup = (html) => html.replace(/<(pre|code|script|style)\b[\s\S]*?<\/\1>/gi, '');
+// HTML comments hold no anchors and no links.
+const uncommented = (html) => html.replace(/<!--[\s\S]*?-->/g, '');
+// Content outside <pre> and <code> too, so that examples showing HTML are not read as links.
+const markup = (html) => uncommented(html).replace(/<(pre|code|script|style)\b[\s\S]*?<\/\1>/gi, '');
 
 const pages = new Map(); // file → { ids, links, source }
 for (const file of htmlFiles(dist)) {
@@ -58,7 +60,7 @@ for (const file of htmlFiles(dist)) {
 	const body = markup(html);
 	// Attribute values in any quoting: Astro writes "…", but a page's own HTML may use '…'.
 	const value = (m) => m[1] ?? m[2] ?? m[3];
-	const ids = new Set([...html.matchAll(/\s(?:id|name)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^"'\s>]+))/gi)].map((m) => decode(value(m))));
+	const ids = new Set([...uncommented(html).matchAll(/\s(?:id|name)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^"'\s>]+))/gi)].map((m) => decode(value(m))));
 	const links = [...body.matchAll(/<a\b[^>]*?\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^"'\s>]+))/gi)].map((m) =>
 		value(m).replaceAll('&amp;', '&'),
 	);

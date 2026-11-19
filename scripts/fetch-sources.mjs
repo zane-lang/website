@@ -13,7 +13,7 @@ import { existsSync, lstatSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { defaultRef, envName, github, manifestPath, repos, reposDir, root } from '../src/lib/sources.mjs';
+import { defaultRef, envName, github, keepsRef, manifestPath, repos, reposDir, root } from '../src/lib/sources.mjs';
 import { buildSiteMap } from '../src/lib/site-map.mjs';
 
 const run = promisify(execFile);
@@ -100,13 +100,14 @@ const results = await Promise.allSettled(
 		if (localPath) return [repo, await useLocal(repo, localPath)];
 
 		const destination = join(reposDir, repo);
+		const ref = process.env[envName(repo, 'REF')] || defaultRef;
 		const kept = previousManifest.repos?.[repo];
 		const entries = await readdir(destination).catch(() => []);
-		if (skipIfExists && entries.length > 0 && kept?.kind === 'clone' && !isLink(destination)) {
+		if (skipIfExists && entries.length > 0 && !isLink(destination) && keepsRef(kept, ref)) {
 			console.log(`Keeping zane-lang/${repo}@${kept.ref} (${kept.commit?.slice(0, 12)}); run npm run fetch to refresh.`);
 			return [repo, kept];
 		}
-		return [repo, await clone(repo, folders, process.env[envName(repo, 'REF')] || defaultRef)];
+		return [repo, await clone(repo, folders, ref)];
 	}),
 );
 

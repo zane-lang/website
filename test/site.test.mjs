@@ -8,9 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { titleOf, descriptionOf, indexOutline, lines } from '../src/lib/markdown.mjs';
 import { buildSiteMap, sharedPrefix, routeForPath, locateFile } from '../src/lib/site-map.mjs';
 import { resolveHref, githubUrl } from '../src/lib/links.mjs';
-import { alertFrom, isMissing } from '../src/plugins/zane-docs.mjs';
+import { alertFrom, isMissing, kindOf } from '../src/plugins/zane-docs.mjs';
 import { sampleFrom } from '../src/lib/home.mjs';
-import { sources } from '../src/lib/sources.mjs';
+import { keepsRef, sources } from '../src/lib/sources.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = join(here, 'fixtures/repos');
@@ -122,6 +122,19 @@ test('links to anything unpublished point at GitHub', () => {
 	assert.equal(githubUrl('std', 'lib/core'), 'https://github.com/zane-lang/std/tree/main/lib/core');
 });
 
+test('an extensionless file the fetched copy holds links to its file view on GitHub', () => {
+	const from = { repo: 'spec', path: 'spec/foundations.md' };
+	const kind = (repo, path) => kindOf(repo, path, fixtures);
+	assert.equal(kind('spec', 'LICENSE'), 'file');
+	assert.equal(kind('spec', 'memorybench'), 'dir');
+	assert.equal(kind('spec', 'nowhere'), undefined);
+	const resolve = (href) => resolveHref(from, href, map.byFile, () => false, kind);
+	assert.equal(resolve('../LICENSE'), 'https://github.com/zane-lang/spec/blob/main/LICENSE');
+	assert.equal(resolve('../memorybench'), 'https://github.com/zane-lang/spec/tree/main/memorybench');
+	assert.equal(resolve('../memorybench/runbench.py'), 'https://github.com/zane-lang/spec/blob/main/memorybench/runbench.py');
+	assert.equal(githubUrl('spec', 'Makefile.d', 'dir'), 'https://github.com/zane-lang/spec/tree/main/Makefile.d');
+});
+
 test('a link to a missing file in a fetched folder points where the link check reports it', () => {
 	const missing = (repo, path) => isMissing(repo, path, fixtures);
 	const from = { repo: 'spec', path: 'spec/foundations.md' };
@@ -164,22 +177,32 @@ test('the link check passes good links and names broken ones', () => {
 		writeFileSync(join(dist, route, 'index.html'), `<html><head><meta name="zane:source" content="spec/spec${route}.md"></head><body>${body}</body></html>`);
 	};
 	page('/spec/types', '<h2 id="2-values">Values</h2>');
-	page('/spec/memory', '<a href="/spec/types#2-values">ok</a><a href="https://github.com/x">external</a><pre><a href="/nowhere">in code</a></pre>');
+	page('/spec/memory', '<a href="/spec/types#2-values">ok</a><a href="https://github.com/x">external</a><pre><a href="/nowhere">in code</a></pre><!-- <a href="/removed/">old</a> -->');
 	const script = join(here, '../scripts/check-links.mjs');
 	execFileSync('node', [script, dist]);
 
 	page('/spec/quotes', "<h2 id='single'>S</h2><a href='/spec/quotes#single'>ok</a><a HREF = \"/spec/types#2-values\">ok</a>");
 	execFileSync('node', [script, dist]);
 
-	page('/spec/lifetimes', '<a href="/spec/types#3-gone">anchor</a><a href="/spec/nowhere">page</a><a href=\'/spec/x%zz\'>bad escape</a>');
+	page('/spec/lifetimes', '<!-- <h2 id="commented">x</h2> --><a href="/spec/lifetimes#commented">commented anchor</a><a href="/spec/types#3-gone">anchor</a><a href="/spec/nowhere">page</a><a href=\'/spec/x%zz\'>bad escape</a>');
 	const run = spawnSync('node', [script, dist], { encoding: 'utf8' });
 	assert.equal(run.status, 1);
 	assert.match(run.stderr, /spec\/spec\/spec\/lifetimes\.md:/);
 	assert.match(run.stderr, /\/spec\/types#3-gone — no #3-gone on \/spec\/types\//);
 	assert.match(run.stderr, /\/spec\/nowhere — no such page/);
+	assert.match(run.stderr, /#commented — no #commented on/);
+	assert.doesNotMatch(run.stderr, /removed/);
 	assert.match(run.stderr, /\/spec\/x%zz — no such page/);
 
 	const missing = spawnSync('node', [script, join(dist, 'nope')], { encoding: 'utf8' });
 	assert.equal(missing.status, 1);
 	assert.match(missing.stderr, /does not exist: run npm run build first/);
+});
+
+test('a kept download is reused only for the ref it was cloned from', () => {
+	const kept = { kind: 'clone', ref: 'main', commit: 'abc' };
+	assert.equal(keepsRef(kept, 'main'), true);
+	assert.equal(keepsRef(kept, 'my-branch'), false, 'ZANE_SPEC_REF=my-branch npm run dev must fetch the branch');
+	assert.equal(keepsRef({ kind: 'local', path: '/x' }, 'main'), false);
+	assert.equal(keepsRef(undefined, 'main'), false);
 });

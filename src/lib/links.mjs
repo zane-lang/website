@@ -18,9 +18,15 @@ function publishedRoute(byFile, repo, repoPath) {
 	return page?.route;
 }
 
-export function githubUrl(repo, repoPath) {
+/**
+ * The GitHub page of a path in a repository: `blob` for a file, `tree` for a folder.
+ * @param {'file' | 'dir'} [known]  what the path is, when the fetched copy says;
+ *   otherwise a name with an extension is taken for a file.
+ */
+export function githubUrl(repo, repoPath, known) {
 	const clean = repoPath.replace(/\/+$/, '');
-	const kind = clean === '' || !/\.[A-Za-z0-9]+$/.test(posix.basename(clean)) ? 'tree' : 'blob';
+	const isFile = known ? known === 'file' : clean !== '' && /\.[A-Za-z0-9]+$/.test(posix.basename(clean));
+	const kind = clean !== '' && isFile ? 'blob' : 'tree';
 	return `${github}/${repo}/${kind}/main${clean ? `/${clean}` : ''}`;
 }
 
@@ -33,9 +39,11 @@ export const missingPrefix = '/missing-file';
  * @param {Map<string, { route?: string }>} byFile  published pages, keyed repo:path
  * @param {(repo: string, path: string) => boolean} [isMissing]  whether a path
  *   inside a fetched documentation folder does not exist
+ * @param {(repo: string, path: string) => 'file' | 'dir' | undefined} [kindOf]
+ *   what a path is in the fetched copy, when it is there
  * @returns {string} the link to put on the site
  */
-export function resolveHref(from, href, byFile, isMissing = () => false) {
+export function resolveHref(from, href, byFile, isMissing = () => false, kindOf = () => undefined) {
 	if (!href || href.startsWith('#')) return href;
 
 	const remote = href.match(githubFile);
@@ -58,5 +66,5 @@ export function resolveHref(from, href, byFile, isMissing = () => false) {
 	const route = publishedRoute(byFile, from.repo, repoPath);
 	if (route) return route + query + hash;
 	if (isMissing(from.repo, repoPath)) return `${missingPrefix}/${from.repo}/${repoPath}`;
-	return githubUrl(from.repo, repoPath) + query + hash;
+	return githubUrl(from.repo, repoPath, kindOf(from.repo, repoPath)) + query + hash;
 }

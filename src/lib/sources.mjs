@@ -87,3 +87,13 @@ export const routeOf = (source) => `/${source.id}`;
 
 /** The environment variable names for a repository, e.g. ZANE_SPEC_REF. */
 export const envName = (repo, kind) => `ZANE_${repo.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_${kind}`;
+
+/**
+ * Whether a download recorded in the manifest can stand in for a fetch of `ref`
+ * (`npm run dev` keeps downloads): only a clone of that same ref can.
+ * @param {{ kind?: string, ref?: string } | undefined} kept
+ * @param {string} ref
+ */
+export function keepsRef(kept, ref) {
+	return kept?.kind === 'clone' && kept.ref === ref;
+}
