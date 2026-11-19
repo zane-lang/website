@@ -98,17 +98,37 @@ export function descriptionOf(markdown, maxLength = 200) {
  */
 export function indexOutline(markdown) {
 	const items = [];
-	for (const { text, code } of lines(markdown)) {
+	const all = lines(markdown);
+	// A link shown inside a code span is text, not a link.
+	const prose = (text) => text.replace(codeSpan, (span) => ' '.repeat(span.length));
+	// Reference definitions, `[label]: target`, for links written `[text][label]`,
+	// `[label][]` or `[label]`. Labels match ignoring case and runs of spaces.
+	const label = (text) => text.trim().replace(/\s+/g, ' ').toLowerCase();
+	const definition = /^ {0,3}\[((?:[^\]\\]|\\.)+)\]:[ \t]*<?([^\s>]+)>?(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*$/;
+	const definitions = new Map();
+	for (const { text, code } of all) {
+		const m = !code && prose(text).match(definition);
+		if (m && !definitions.has(label(m[1]))) definitions.set(label(m[1]), m[2]);
+	}
+	const inline = /(?<!!)\[((?:[^\]\\]|\\.)*)\](?:\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)|\[((?:[^\]\\]|\\.)*)\])?/g;
+	for (const { text, code } of all) {
 		if (code) continue;
 		const heading = text.match(/^ {0,3}##[ \t]+(.*?)[ \t]*#*[ \t]*$/);
 		if (heading) {
 			items.push({ type: 'group', title: plain(heading[1]) });
 			continue;
 		}
-		// A link shown inside a code span is text, not a link.
-		const prose = text.replace(codeSpan, (span) => ' '.repeat(span.length));
-		for (const m of prose.matchAll(/(?<!!)\[(?:[^\]\\]|\\.)*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)) {
-			items.push({ type: 'link', href: m[1] });
+		const line = prose(text);
+		if (definition.test(line)) continue;
+		for (const m of line.matchAll(inline)) {
+			if (m[2] !== undefined) {
+				items.push({ type: 'link', href: m[2] });
+				continue;
+			}
+			// `[text][label]`, `[label][]`, or a bare `[label]` not followed by `(`.
+			if (m[3] === undefined && line[m.index + m[0].length] === '(') continue;
+			const href = definitions.get(label(m[3] || m[1]));
+			if (href) items.push({ type: 'link', href });
 		}
 	}
 	return items;

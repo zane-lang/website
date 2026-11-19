@@ -305,3 +305,24 @@ test('a local checkout inside the download folder is refused, not deleted', () =
 	assert.match(run.stderr, /ZANE_DOCS_PATH=.* is inside .*, which fetching replaces/);
 	assert.ok(existsSync(join(downloaded, 'docs')), 'the checkout is still there');
 });
+
+test('reference-style links in an index count, in the order they appear', () => {
+	const md = [
+		'# Index',
+		'',
+		'- [Tour][tour] then [Install](install.md)',
+		'- [Errors][] and [faq] and [Not defined][nope] and `[tour]`',
+		'- [Spaced  Label][SPACED label]',
+		'',
+		'[tour]: tour/README.md "The tour"',
+		'[errors]: <tour/errors.md>',
+		'[FAQ]: faq.md',
+		'[spaced label]: spaced.md',
+		'',
+		'```md',
+		'[tour]: ignored.md',
+		'```',
+	].join('\n');
+	const hrefs = indexOutline(md).filter((i) => i.type === 'link').map((i) => i.href);
+	assert.deepEqual(hrefs, ['tour/README.md', 'install.md', 'tour/errors.md', 'faq.md', 'spaced.md']);
+});
