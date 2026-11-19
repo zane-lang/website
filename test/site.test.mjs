@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { titleOf, descriptionOf, indexOutline, lines } from '../src/lib/markdown.mjs';
-import { buildSiteMap, sharedPrefix, routeForPath } from '../src/lib/site-map.mjs';
+import { buildSiteMap, sharedPrefix, routeForPath, locateFile } from '../src/lib/site-map.mjs';
 import { resolveHref, githubUrl } from '../src/lib/links.mjs';
 import { alertFrom, isMissing } from '../src/plugins/zane-docs.mjs';
 import { sampleFrom } from '../src/lib/home.mjs';
@@ -25,6 +25,23 @@ test('titles come from the first level-one heading, outside code', () => {
 test('the description is the first paragraph after the title', () => {
 	assert.equal(descriptionOf('# T\n\n> quote\n\nFirst *real* line\ncontinues.\n\nSecond.'), 'First real line continues.');
 	assert.match(descriptionOf(`# T\n\n${'word '.repeat(80)}`), /…$/);
+});
+
+test('a description with no space to cut at is cut at the limit', () => {
+	assert.equal(descriptionOf(`# T\n\n${'x'.repeat(250)}`, 200), `${'x'.repeat(200)}…`);
+});
+
+test('a malformed %-escape in a link does not stop the build', () => {
+	const from = { repo: 'spec', path: 'spec/foundations.md' };
+	assert.equal(resolveHref(from, 'bad%zz.md', map.byFile), 'https://github.com/zane-lang/spec/blob/main/spec/bad%zz.md');
+	assert.equal(resolveHref(from, 'https://github.com/zane-lang/spec/blob/main/spec/%E0%A4%A.md', map.byFile),
+		'https://github.com/zane-lang/spec/blob/main/spec/%E0%A4%A.md');
+	assert.doesNotThrow(() => buildSiteMap(fixtures));
+});
+
+test('a fetched file maps back to its repository path', () => {
+	assert.deepEqual(locateFile(join(fixtures, 'spec', 'spec', 'types.md'), fixtures), { repo: 'spec', path: 'spec/types.md' });
+	assert.equal(locateFile(join(here, 'site.test.mjs'), fixtures), undefined);
 });
 
 test('fences follow CommonMark: a longer fence holds a shorter one', () => {
@@ -151,10 +168,18 @@ test('the link check passes good links and names broken ones', () => {
 	const script = join(here, '../scripts/check-links.mjs');
 	execFileSync('node', [script, dist]);
 
-	page('/spec/lifetimes', '<a href="/spec/types#3-gone">anchor</a><a href="/spec/nowhere">page</a>');
+	page('/spec/quotes', "<h2 id='single'>S</h2><a href='/spec/quotes#single'>ok</a><a HREF = \"/spec/types#2-values\">ok</a>");
+	execFileSync('node', [script, dist]);
+
+	page('/spec/lifetimes', '<a href="/spec/types#3-gone">anchor</a><a href="/spec/nowhere">page</a><a href=\'/spec/x%zz\'>bad escape</a>');
 	const run = spawnSync('node', [script, dist], { encoding: 'utf8' });
 	assert.equal(run.status, 1);
 	assert.match(run.stderr, /spec\/spec\/spec\/lifetimes\.md:/);
 	assert.match(run.stderr, /\/spec\/types#3-gone — no #3-gone on \/spec\/types\//);
 	assert.match(run.stderr, /\/spec\/nowhere — no such page/);
+	assert.match(run.stderr, /\/spec\/x%zz — no such page/);
+
+	const missing = spawnSync('node', [script, join(dist, 'nope')], { encoding: 'utf8' });
+	assert.equal(missing.status, 1);
+	assert.match(missing.stderr, /does not exist: run npm run build first/);
 });

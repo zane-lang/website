@@ -1,6 +1,15 @@
 // Small, dependency-free readers for the parts of a page the site needs before
 // rendering it: its title, its description and, for an index, its links.
 
+/** decodeURIComponent, or the text unchanged when its %-escapes are malformed. */
+export function safeDecode(text) {
+	try {
+		return decodeURIComponent(text);
+	} catch {
+		return text;
+	}
+}
+
 /** Splits Markdown into lines, marking those inside fenced code blocks. */
 export function lines(markdown) {
 	const out = [];
@@ -71,7 +80,8 @@ export function descriptionOf(markdown, maxLength = 200) {
 	const text = plain(paragraph.join(' '));
 	if (text.length <= maxLength) return text;
 	const cut = text.slice(0, maxLength);
-	return cut.slice(0, cut.lastIndexOf(' ')) + '…';
+	const lastSpace = cut.lastIndexOf(' ');
+	return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…';
 }
 
 /**

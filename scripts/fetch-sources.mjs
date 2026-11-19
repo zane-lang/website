@@ -50,7 +50,8 @@ async function useLocal(repo, localPath) {
 	if (!existsSync(target)) throw new Error(`${envName(repo, 'PATH')}=${localPath}: no such directory`);
 	const destination = join(reposDir, repo);
 	await removeEntry(destination);
-	await symlink(target, destination, 'dir');
+	// A junction needs no administrator rights on Windows; elsewhere the type is ignored.
+	await symlink(target, destination, process.platform === 'win32' ? 'junction' : 'dir');
 	const commit = await git(['-C', target, 'rev-parse', 'HEAD']).catch(() => undefined);
 	console.log(`Linked ${repo} to ${target}`);
 	return { kind: 'local', path: target, commit };

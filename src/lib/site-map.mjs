@@ -3,8 +3,8 @@
 // in order, the pages (a link to a subfolder's README.md nests that folder).
 // A page no index links is not published. See PUBLISHING.md.
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
-import { join, posix } from 'node:path';
-import { titleOf, descriptionOf, indexOutline } from './markdown.mjs';
+import { join, posix, sep } from 'node:path';
+import { titleOf, descriptionOf, indexOutline, safeDecode } from './markdown.mjs';
 import { sources, reposDir as defaultReposDir, routeOf } from './sources.mjs';
 
 /**
@@ -38,7 +38,7 @@ function walkMarkdown(dir, prefix, out = []) {
 		if (entry.name.startsWith('.')) continue;
 		const path = join(dir, entry.name);
 		const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-		const isDir = entry.isDirectory() || (entry.isSymbolicLink() && statSync(path).isDirectory());
+		const isDir = entry.isDirectory() || (entry.isSymbolicLink() && statSync(path, { throwIfNoEntry: false })?.isDirectory());
 		if (isDir) walkMarkdown(path, rel, out);
 		else if (/\.md$/i.test(entry.name)) out.push(rel);
 	}
@@ -121,7 +121,7 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 				}
 				const target = item.href.split(/[?#]/)[0];
 				if (!target || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('/')) continue;
-				let resolved = posix.normalize(posix.join(posix.dirname(repoPath), decodeURIComponent(target)));
+				let resolved = posix.normalize(posix.join(posix.dirname(repoPath), safeDecode(target)));
 				// A link to a folder means that folder's index.
 				if (!/\.md$/i.test(resolved) && existsSync(join(repoDir, resolved, 'README.md'))) resolved = posix.join(resolved, 'README.md');
 				if (!resolved.startsWith(`${source.folder}/`) || !/\.md$/i.test(resolved)) continue;
@@ -171,7 +171,8 @@ export function locateFile(absPath, reposDir = defaultReposDir) {
 			bases.push(realpathSync(join(reposDir, repo)));
 		} catch {}
 		for (const base of bases) {
-			if (absPath.startsWith(base + '/')) return { repo, path: absPath.slice(base.length + 1) };
+			// Repository paths always use '/', whatever the platform's separator.
+			if (absPath.startsWith(base + sep)) return { repo, path: absPath.slice(base.length + 1).split(sep).join('/') };
 		}
 	}
 	return undefined;

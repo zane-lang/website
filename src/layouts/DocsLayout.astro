@@ -139,7 +139,7 @@ const sourceUrl = `${github}/${page.repo}/blob/main/${page.path}`;
 		copy.textContent = 'Copy';
 		copy.addEventListener('click', async () => {
 			try {
-				await navigator.clipboard.writeText(pre.innerText.replace(/\n$/, ''));
+				await navigator.clipboard.writeText((pre.textContent ?? '').replace(/\n$/, ''));
 				copy.textContent = 'Copied';
 			} catch {
 				getSelection()?.selectAllChildren(pre);

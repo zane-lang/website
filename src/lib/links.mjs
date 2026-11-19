@@ -2,6 +2,7 @@
 // published pages become site routes; links to anything else in a Zane
 // repository point at GitHub, so they work the same as when read there.
 import { posix } from 'node:path';
+import { safeDecode } from './markdown.mjs';
 import { github } from './sources.mjs';
 
 const githubFile = /^https:\/\/github\.com\/zane-lang\/([^/]+)\/(?:blob|tree)\/main\/([^?#]*)(\?[^#]*)?(#.*)?$/;
@@ -40,7 +41,7 @@ export function resolveHref(from, href, byFile, isMissing = () => false) {
 	const remote = href.match(githubFile);
 	if (remote) {
 		const [, repo, repoPath, query = '', hash = ''] = remote;
-		const path = decodeURIComponent(repoPath).replace(/\/+$/, '');
+		const path = safeDecode(repoPath).replace(/\/+$/, '');
 		const route = publishedRoute(byFile, repo, path);
 		if (route) return route + query + hash;
 		return isMissing(repo, path) ? `${missingPrefix}/${repo}/${path}` : href;
@@ -50,7 +51,7 @@ export function resolveHref(from, href, byFile, isMissing = () => false) {
 
 	const { path, query, hash } = splitHref(href);
 	if (!path) return href;
-	const joined = posix.normalize(posix.join(posix.dirname(from.path), decodeURIComponent(path)));
+	const joined = posix.normalize(posix.join(posix.dirname(from.path), safeDecode(path)));
 	if (joined === '..' || joined.startsWith('../')) return href; // outside the repository: leave for the link check
 	const repoPath = joined === '.' ? '' : joined;
 
