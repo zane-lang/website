@@ -1,0 +1,87 @@
+---
+// One level of a tab's sidebar: the pages and groups an index lists, in its order.
+interface Node {
+	kind: 'page' | 'group';
+	title: string;
+	label?: string;
+	route?: string;
+	children: Node[];
+}
+interface Props {
+	nodes: Node[];
+	current: string;
+}
+
+const { nodes, current } = Astro.props;
+// A group whose pages were all listed earlier in the index has nothing to show.
+const visible = nodes.filter((n) => n.kind === 'page' || n.children.length > 0);
+---
+
+<ul class="sidebar-tree">
+	{visible.map((node) => (
+		<li class:list={['sidebar-tree__item', `sidebar-tree__item--${node.kind}`]}>
+			{node.kind === 'group' ? (
+				<span class="sidebar-tree__group">{node.title}</span>
+			) : (
+				<a
+					href={node.route}
+					class:list={['sidebar-tree__link', { 'sidebar-tree__link--active': node.route === current }]}
+					aria-current={node.route === current ? 'page' : undefined}
+				>
+					{node.label ?? node.title}
+				</a>
+			)}
+			{node.children.length > 0 && <Astro.self nodes={node.children} current={current} />}
+		</li>
+	))}
+</ul>
+
+<style lang="scss">
+	.sidebar-tree {
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+
+		.sidebar-tree {
+			margin: 2px 0 4px 0.7rem;
+			padding-left: 0.5rem;
+			border-left: 1px solid var(--border);
+		}
+	}
+
+	.sidebar-tree__item--group:not(:first-child) { margin-top: 1rem; }
+
+	.sidebar-tree__group {
+		display: block;
+		padding: 0.3rem 0.6rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--text-faint);
+	}
+
+	.sidebar-tree__item--group > .sidebar-tree {
+		margin-left: 0;
+		padding-left: 0;
+		border-left: none;
+	}
+
+	.sidebar-tree__link {
+		display: block;
+		padding: 0.3rem 0.6rem;
+		border-radius: var(--radius-sm);
+		color: var(--text-muted);
+		line-height: 1.4;
+
+		&:hover { color: var(--text); background: var(--bg-subtle); }
+
+		&--active,
+		&--active:hover {
+			color: var(--accent);
+			background: var(--accent-soft);
+			font-weight: 500;
+		}
+	}
+</style>

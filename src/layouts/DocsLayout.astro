@@ -1,135 +1,82 @@
 ---
 import Base from './Base.astro';
-import { getCollection, type CollectionEntry } from 'astro:content';
 import type { MarkdownHeading } from 'astro';
 import { ChevronLeft, ChevronRight, PanelLeft, Pencil } from 'lucide-astro';
-import { site } from '../config.ts';
+import SidebarTree from '../components/SidebarTree.astro';
+import { siteMap } from '../lib/site-map.mjs';
+import { github } from '../lib/sources.mjs';
 
 interface Props {
-	doc: CollectionEntry<'docs'>;
+	page: {
+		title: string;
+		description?: string;
+		route: string;
+		source: string;
+		repo: string;
+		path: string;
+	};
 	headings?: MarkdownHeading[];
 }
 
-const { doc, headings = [] } = Astro.props;
-const title = doc.data.title;
-const docs = await getCollection('docs');
-const current = Astro.url.pathname.replace(/\/$/, '') || '/';
-const rootDoc = docs.find(d => d.id === 'docs');
+const { page, headings = [] } = Astro.props;
+const tab = siteMap().tabs.find((t) => t.source.id === page.source)!;
+const root = tab.root!;
+const index = tab.pages.findIndex((p) => p.route === page.route);
+const prev = index > 0 ? tab.pages[index - 1] : undefined;
+const next = index >= 0 && index < tab.pages.length - 1 ? tab.pages[index + 1] : undefined;
 
-type Segment = 'line' | 'edge' | 'corner' | 'empty';
-
-type FlatNode = {
-	title: string;
-	href: string;
-	structure: Segment[];
-};
-
-type TreeNode = {
-	title: string;
-	href: string;
-	children: Record<string, TreeNode>;
-};
-
-const tree: Record<string, TreeNode> = {};
-for (const d of docs.filter(d => d.id !== 'docs').sort((a, b) => a.id.localeCompare(b.id))) {
-	const parts = d.id.replace(/^docs\//, '').split('/');
-	let node = tree;
-	for (let i = 0; i < parts.length; i++) {
-		const part = parts[i];
-		if (!node[part]) node[part] = { title: part, href: '', children: {} };
-		if (i === parts.length - 1) {
-			node[part].title = d.data.title;
-			node[part].href = '/docs/' + parts.join('/');
-		}
-		node = node[part].children;
-	}
-}
-
-function flatten(nodes: Record<string, TreeNode>, ancestors: ('line' | 'empty')[] = []): FlatNode[] {
-	const entries = Object.entries(nodes);
-	return entries.flatMap(([, node], i) => {
-		const isLast = i === entries.length - 1;
-		return [
-			{ title: node.title, href: node.href, structure: [...ancestors, isLast ? 'corner' : 'edge'] as Segment[] },
-			...flatten(node.children, [...ancestors, isLast ? 'empty' : 'line']),
-		];
-	});
-}
-
-const flat = flatten(tree);
-
-// Reading order for the previous/next links: the overview, then the tree.
-const order = [
-	...(rootDoc ? [{ title: rootDoc.data.title, href: '/docs' }] : []),
-	...flat.filter(n => n.href),
-];
-const index = order.findIndex(n => n.href === current);
-const prev = index > 0 ? order[index - 1] : undefined;
-const next = index >= 0 && index < order.length - 1 ? order[index + 1] : undefined;
-
-const toc = headings.filter(h => h.depth >= 2 && h.depth <= 3);
-
-// doc.filePath is relative to the project root, e.g. src/content/docs/docs/cli.md.
-const sourcePath = doc.filePath?.replace(/^src\/content\/docs\//, '');
-const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourcePath}` : undefined;
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+const editUrl = `${github}/${page.repo}/edit/main/${page.path}`;
+const sourceUrl = `${github}/${page.repo}/blob/main/${page.path}`;
 ---
 
-<Base title={title} description={doc.data.description}>
+<Base title={page.title} description={page.description}>
+	<Fragment slot="head">
+		<meta name="zane:source" content={`${page.repo}/${page.path}`} />
+	</Fragment>
 	<div class="docs">
 		<button class="docs__menu" type="button" aria-controls="docs-sidebar" aria-expanded="false">
 			<PanelLeft size={16} />
-			<span>Contents</span>
+			<span>{tab.source.label} contents</span>
 		</button>
 
 		<aside id="docs-sidebar" class="docs__sidebar">
-			<nav class="tree" aria-label="Documentation">
-				{rootDoc && (
-					<a href="/docs" class:list={['tree__root', { 'tree__root--active': current === '/docs' }]}>
-						{rootDoc.data.title}
-					</a>
-				)}
-				{flat.map(node => (
-					node.href
-						? <a href={node.href} title={node.title}
-							class:list={['tree__item', { 'tree__item--active': current === node.href }]}
-							aria-current={current === node.href ? 'page' : undefined}>
-							<span class="tree__path">
-								{node.structure.slice(1).map(type => <span class={`path-unit path-unit--${type}`} />)}
-							</span>
-							<span class="tree__label">{node.title}</span>
-						</a>
-						: <span class="tree__item tree__item--group">
-							<span class="tree__path">
-								{node.structure.slice(1).map(type => <span class={`path-unit path-unit--${type}`} />)}
-							</span>
-							<span class="tree__label">{node.title}</span>
-						</span>
-				))}
+			<nav class="tree" aria-label={`${tab.source.label} pages`}>
+				<a href={root.route} class:list={['tree__root', { 'tree__root--active': page.route === root.route }]}
+					aria-current={page.route === root.route ? 'page' : undefined}>
+					{root.title}
+				</a>
+				<SidebarTree nodes={root.children} current={page.route} />
 			</nav>
 		</aside>
 		<div class="docs__scrim" hidden></div>
 
 		<main class="docs__main">
-			<article class="markdown">
+			<article class="markdown" data-pagefind-body>
+				<span hidden data-pagefind-filter="section">{tab.source.label}</span>
+				<span hidden data-pagefind-meta="section">{tab.source.label}</span>
 				<slot />
 			</article>
 
 			<footer class="docs__footer">
-				{editUrl && (
+				<div class="docs__source">
 					<a class="docs__edit" href={editUrl} target="_blank" rel="noopener">
 						<Pencil size={14} /> Edit this page on GitHub
 					</a>
-				)}
+					<a class="docs__edit" href={sourceUrl} target="_blank" rel="noopener">
+						{`zane-lang/${page.repo}`} · <code>{page.path}</code>
+					</a>
+				</div>
 				{(prev || next) && (
 					<nav class="pager" aria-label="Previous and next page">
 						{prev ? (
-							<a class="pager__link" href={prev.href} rel="prev">
+							<a class="pager__link" href={prev.route} rel="prev">
 								<span class="pager__hint"><ChevronLeft size={14} /> Previous</span>
 								<span class="pager__title">{prev.title}</span>
 							</a>
 						) : <span />}
 						{next && (
-							<a class="pager__link pager__link--next" href={next.href} rel="next">
+							<a class="pager__link pager__link--next" href={next.route} rel="next">
 								<span class="pager__hint">Next <ChevronRight size={14} /></span>
 								<span class="pager__title">{next.title}</span>
 							</a>
@@ -170,6 +117,42 @@ const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourceP
 	button?.addEventListener('click', () => setOpen(!sidebar?.classList.contains('docs__sidebar--open')));
 	scrim?.addEventListener('click', () => setOpen(false));
 	document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+
+	// A language label and a copy button on every code block.
+	for (const pre of document.querySelectorAll<HTMLPreElement>('.markdown pre')) {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'code-block';
+		pre.replaceWith(wrapper);
+		wrapper.append(pre);
+		const tools = document.createElement('div');
+		tools.className = 'code-block__tools';
+		const lang = pre.dataset.language;
+		if (lang && lang !== 'plaintext') {
+			const label = document.createElement('span');
+			label.className = 'code-block__lang';
+			label.textContent = lang;
+			tools.append(label);
+		}
+		const copy = document.createElement('button');
+		copy.type = 'button';
+		copy.className = 'code-block__copy';
+		copy.textContent = 'Copy';
+		copy.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(pre.innerText.replace(/\n$/, ''));
+				copy.textContent = 'Copied';
+			} catch {
+				getSelection()?.selectAllChildren(pre);
+				copy.textContent = 'Selected';
+			}
+			setTimeout(() => (copy.textContent = 'Copy'), 1600);
+		});
+		tools.append(copy);
+		wrapper.append(tools);
+	}
+
+	// Keep the current page in view in a long sidebar.
+	document.querySelector('.docs__sidebar [aria-current="page"]')?.scrollIntoView({ block: 'center' });
 
 	// Highlight the section being read in "On this page".
 	const pairs = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')].flatMap(link => {
@@ -264,73 +247,6 @@ const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourceP
 		&--active:hover { background: var(--tint); color: var(--tint-text); }
 	}
 
-	.tree__item {
-		display: flex;
-		align-items: stretch;
-		border-radius: var(--radius-sm);
-		color: var(--text-muted);
-		padding-left: 0.6rem;
-
-		&:hover { color: var(--text); }
-
-		&--group { color: var(--text); font-weight: 500; }
-
-		&--active {
-			color: var(--accent);
-			font-weight: 500;
-
-			.tree__label { background: var(--accent-soft); }
-			&:hover { color: var(--accent); }
-		}
-	}
-
-	.tree__path {
-		display: flex;
-		flex-shrink: 0;
-	}
-
-	.tree__label {
-		display: block;
-		padding: 0.3rem 0.5rem;
-		border-radius: var(--radius-sm);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		min-width: 0;
-		flex: 1;
-	}
-
-	.path-unit {
-		position: relative;
-		width: 1rem;
-		flex-shrink: 0;
-
-		&--line::before,
-		&--edge::before,
-		&--corner::before {
-			content: '';
-			position: absolute;
-			left: calc(50% - 0.5px);
-			top: 0;
-			bottom: 0;
-			width: 1px;
-			background: var(--border-strong);
-		}
-
-		&--corner::before { bottom: 50%; }
-
-		&--edge::after,
-		&--corner::after {
-			content: '';
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			right: 0;
-			height: 1px;
-			background: var(--border-strong);
-		}
-	}
-
 	// ── On this page ──────────────────────────────────────────────────────────
 
 	.toc__heading {
@@ -372,6 +288,13 @@ const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourceP
 		gap: 1.5rem;
 	}
 
+	.docs__source {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.5rem 1.5rem;
+	}
+
 	.docs__edit {
 		display: inline-flex;
 		align-items: center;
@@ -381,6 +304,7 @@ const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourceP
 		color: var(--text-muted);
 
 		&:hover { color: var(--accent); }
+		code { font-size: 0.8rem; }
 	}
 
 	.pager {

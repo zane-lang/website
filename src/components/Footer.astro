@@ -1,5 +1,6 @@
 ---
 import { site } from '../config.ts';
+import { sources, routeOf } from '../lib/sources.mjs';
 ---
 
 <footer class="footer">
@@ -9,9 +10,8 @@ import { site } from '../config.ts';
 			<span>{site.name}</span>
 		</a>
 		<nav class="footer__links" aria-label="Footer">
-			<a href="/docs">Docs</a>
-			<a href="https://github.com/zane-lang/zane" target="_blank" rel="noopener">The zane command</a>
-			<a href="https://github.com/zane-lang/spec" target="_blank" rel="noopener">Specification</a>
+			{sources.map((s) => <a href={routeOf(s)}>{s.label}</a>)}
+			<a href={site.benchmarks} target="_blank" rel="noopener">Benchmarks</a>
 			<a href={site.github} target="_blank" rel="noopener">GitHub</a>
 		</nav>
 	</div>

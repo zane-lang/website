@@ -2,6 +2,7 @@
 import "../styles/defaults.scss";
 import "../styles/global.scss";
 import { site } from '../config.ts';
+import { sources, routeOf } from '../lib/sources.mjs';
 import NavBar from '../components/NavBar.astro';
 import Footer from '../components/Footer.astro';
 
@@ -12,6 +13,7 @@ interface Props {
 
 const { title, description = site.description } = Astro.props;
 const fullTitle = title && title !== site.name ? `${title} · ${site.name}` : site.name;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href;
 ---
 
 <!doctype html>
@@ -43,16 +45,20 @@ const fullTitle = title && title !== site.name ? `${title} · ${site.name}` : si
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
 		<meta name="theme-color" content="#653f3f" />
+		<link rel="canonical" href={canonical} />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={site.name} />
+		<meta property="og:url" content={canonical} />
 		<meta property="og:title" content={fullTitle} />
 		<meta property="og:description" content={description} />
+		<meta name="twitter:card" content="summary" />
+		<slot name="head" />
 		<link rel="icon" href={site.icon} type="image/svg+xml" />
 		<title>{fullTitle}</title>
 	</head>
 	<body>
-		<NavBar links={[
-			{ label: "Docs", href: "/docs" },
-			{ label: "Specification", href: "https://github.com/zane-lang/spec" },
-		]} />
+		<NavBar links={sources.map((s) => ({ label: s.label, href: routeOf(s) }))} />
 		<slot />
 		<Footer />
 	</body>
