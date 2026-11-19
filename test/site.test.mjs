@@ -33,7 +33,8 @@ test('a description with no space to cut at is cut at the limit', () => {
 
 test('a malformed %-escape in a link does not stop the build', () => {
 	const from = { repo: 'spec', path: 'spec/foundations.md' };
-	// Left undecoded, `%zz` names a file called bad%zz.md, whose URL escapes the `%`.
+	// `%zz` is not a valid escape, so it stays undecoded and names a file called
+	// bad%zz.md, whose URL percent-encodes the `%`.
 	assert.equal(resolveHref(from, 'bad%zz.md', map.byFile), 'https://github.com/zane-lang/spec/blob/main/spec/bad%25zz.md');
 	assert.equal(resolveHref(from, 'https://github.com/zane-lang/spec/blob/main/spec/%E0%A4%A.md', map.byFile),
 		'https://github.com/zane-lang/spec/blob/main/spec/%E0%A4%A.md');

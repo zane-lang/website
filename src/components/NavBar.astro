@@ -148,8 +148,8 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 			}
 		}
 
-		// Narrow screens: the tabs move to a scrolling strip under the bar
-		// (--nav-height grows to match, in global.scss).
+		// On narrow screens, the tabs move to a scrolling strip under the bar,
+		// and global.scss increases --nav-height to fit the strip.
 		@media (max-width: 900px) {
 			&__inner {
 				height: auto;

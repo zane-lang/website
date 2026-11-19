@@ -1,8 +1,9 @@
 name: Build
 
 # Builds the site the way production does: fetch every source repository,
-# build, index for search and check every link. It also runs daily, because a
-# change merged in one of the source repositories can break the next deploy.
+# build, index for search and check every link. The workflow also runs daily,
+# because a change merged in one of the source repositories can break the next
+# deploy.
 on:
   push:
     branches: [main]

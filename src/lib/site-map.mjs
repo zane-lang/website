@@ -1,7 +1,8 @@
-// Builds the site's page tree from the fetched sources. Each source folder's
-// README.md is its index: its `##` headings become sidebar groups and its links,
-// in order, the pages (a link to a subfolder's README.md nests that folder).
-// A page no index links is not published. See PUBLISHING.md.
+// Builds the site's page tree from the downloaded sources. Each source folder's
+// README.md is the folder's index page: the index page's `##` headings become
+// sidebar groups, and its links, in order, become the pages (a link to a
+// subfolder's README.md nests that subfolder). A page that no index page links
+// to is not published. See PUBLISHING.md.
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join, posix, sep } from 'node:path';
 import { titleOf, descriptionOf, indexOutline, safeDecode } from './markdown.mjs';
@@ -25,7 +26,7 @@ import { sources, reposDir as defaultReposDir, routeOf } from './sources.mjs';
  * @typedef {{ tabs: Tab[], byFile: Map<string, Node>, problems: Problem[] }} SiteMap
  */
 
-/** The route of a page, from its path inside the repository. */
+/** The route of a page, computed from the page's path inside the repository. */
 export function routeForPath(source, repoPath) {
 	let rel = repoPath.slice(source.folder.length + 1).replace(/\.md$/i, '');
 	if (rel === 'README') rel = '';
@@ -50,8 +51,8 @@ function walkMarkdown(dir, prefix, out = [], seen = new Set()) {
 }
 
 /**
- * Sidebar labels: page titles without the words every page in the tab starts
- * with ("Zane Memory Model" → "Memory Model", "Stories: Types" → "Types").
+ * Sidebar labels: page titles without the leading words that every page title
+ * in the tab shares ("Zane Memory Model" → "Memory Model", "Stories: Types" → "Types").
  */
 export function sharedPrefix(titles) {
 	if (titles.length < 2) return '';
@@ -75,7 +76,8 @@ function labelPages(root) {
 }
 
 /**
- * Builds the tree of every source. Problems are reported, not thrown.
+ * Builds the page tree of every source. Problems are returned in `problems`,
+ * not thrown.
  * @returns {SiteMap}
  */
 export function buildSiteMap(reposDir = defaultReposDir) {
@@ -129,7 +131,7 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 				const target = item.href.split(/[?#]/)[0];
 				if (!target || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith('/')) continue;
 				let resolved = posix.normalize(posix.join(posix.dirname(repoPath), safeDecode(target)));
-				// A link to a folder means that folder's index.
+				// A link to a folder points to that folder's index page.
 				if (!/\.md$/i.test(resolved) && existsSync(join(repoDir, resolved, 'README.md'))) resolved = posix.join(resolved, 'README.md');
 				if (!resolved.startsWith(`${source.folder}/`) || !/\.md$/i.test(resolved)) continue;
 				if (!resolved.endsWith('.md')) {
@@ -185,7 +187,7 @@ export function buildSiteMap(reposDir = defaultReposDir) {
 	return { tabs, byFile, problems };
 }
 
-/** Maps an absolute file path back to { repo, path }, also through symlinks. */
+/** Maps an absolute file path back to { repo, path }, following symlinks. */
 export function locateFile(absPath, reposDir = defaultReposDir) {
 	for (const repo of new Set(sources.map((s) => s.repo))) {
 		const bases = [join(reposDir, repo)];
@@ -193,7 +195,7 @@ export function locateFile(absPath, reposDir = defaultReposDir) {
 			bases.push(realpathSync(join(reposDir, repo)));
 		} catch {}
 		for (const base of bases) {
-			// Repository paths always use '/', whatever the platform's separator.
+			// Repository paths always use '/', whatever the platform's path separator.
 			if (absPath.startsWith(base + sep)) return { repo, path: absPath.slice(base.length + 1).split(sep).join('/') };
 		}
 	}
@@ -202,7 +204,8 @@ export function locateFile(absPath, reposDir = defaultReposDir) {
 
 let cached;
 /**
- * buildSiteMap(), reused for a moment so that rendering many pages reads the indexes once.
+ * The result of buildSiteMap(), cached for two seconds so that rendering many
+ * pages reads the index pages only once.
  * @returns {SiteMap}
  */
 export function siteMap() {

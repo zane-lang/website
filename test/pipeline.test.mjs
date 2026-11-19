@@ -1,5 +1,6 @@
-// The fetch script and the Markdown plugin, run against the fixture repositories
-// in a scratch folder (ZANE_SITE_REPOS_DIR), as a build runs them.
+// Tests of the fetch script and the Markdown plugin, run against the fixture
+// repositories in a scratch folder (ZANE_SITE_REPOS_DIR), the same way a build
+// runs them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

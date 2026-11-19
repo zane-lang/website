@@ -1,5 +1,6 @@
 ---
-// One level of a tab's sidebar: the pages and groups an index lists, in its order.
+// One level of a tab's sidebar: the pages and groups that an index page lists,
+// in the index page's order.
 interface Node {
 	kind: 'page' | 'group';
 	title: string;
@@ -13,7 +14,8 @@ interface Props {
 }
 
 const { nodes, current } = Astro.props;
-// A group whose pages were all listed earlier in the index has nothing to show.
+// A group whose pages were all listed earlier in the index page is not shown,
+// because it has no pages left.
 const visible = nodes.filter((n) => n.kind === 'page' || n.children.length > 0);
 ---
 

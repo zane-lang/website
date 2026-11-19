@@ -4,8 +4,8 @@
 //
 // The brand colours come from the Zane logo (github.com/zane-lang/logos):
 // maroon #653f3f and gold #d5aa41. Neutrals are tinted towards the maroon.
-// The inline script in Base.astro always sets data-theme; the media query only
-// covers visitors without JavaScript.
+// The inline script in Base.astro always sets data-theme, so the media query
+// applies only to visitors without JavaScript.
 
 :root {
 	--brand-maroon: #653f3f;
@@ -189,8 +189,9 @@ pre {
 	code { font-size: inherit; }
 }
 
-// Shiki output: the css-variables theme writes inline styles; the background
-// comes from our token so it matches the surrounding surface.
+// Shiki output: the css-variables theme writes inline styles, and the
+// background comes from a site token so that it matches the surrounding
+// surface.
 pre.astro-code { background-color: var(--code-bg) !important; }
 
 // ── UI Primitives ─────────────────────────────────────────────────────────────
@@ -282,7 +283,7 @@ html { scrollbar-color: var(--border-strong) transparent; }
 
 	hr { margin: 2.5rem 0; }
 
-	// Tables scroll on their own instead of widening the page.
+	// A wide table scrolls horizontally instead of widening the page.
 	table {
 		display: block;
 		width: 100%;
@@ -349,11 +350,11 @@ html { scrollbar-color: var(--border-strong) transparent; }
 		&[open] > summary { margin-bottom: 0.6rem; }
 	}
 
-	// Code blocks get a language label and a copy button (DocsLayout.astro).
+	// Code blocks get a language label and a copy button from DocsLayout.astro.
 	.code-block {
 		position: relative;
 
-		// Room above the first line for the language label and Copy button.
+		// Space above the first line for the language label and the Copy button.
 		pre { margin: 0; padding-top: 2.2rem; }
 	}
 

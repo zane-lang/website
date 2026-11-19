@@ -8,16 +8,17 @@ export default defineConfig({
 	site: 'https://zane-lang.org',
 	integrations: [sitemap()],
 	markdown: {
-		// Pages come from the Zane repositories as GitHub-flavoured Markdown; the
-		// plugin points their links at site routes and renders GitHub alerts.
+		// Pages come from the Zane repositories as GitHub-flavoured Markdown. The
+		// plugin rewrites the pages' links to site routes and renders GitHub alerts.
 		processor: satteri({ hastPlugins: [zaneDocs] }),
 		shikiConfig: {
 			// Token colours come from the site's palette (see global.scss), so
-			// code follows the light/dark theme switch.
+			// code colours change with the light/dark theme switch.
 			theme: 'css-variables',
 			langs: [zane],
-			// No grammar for these: `coda` (zane.coda files) and `output` (a
-			// program's printed output, under a checked example) show as plain text.
+			// These languages have no grammar and show as plain text: `coda`
+			// (zane.coda files) and `output` (a program's printed output, under
+			// a checked example).
 			langAlias: { coda: 'text', output: 'text' },
 		},
 	},

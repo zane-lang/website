@@ -1,6 +1,7 @@
-// Turns a link written in a source page into a link on the site. Links between
-// published pages become site routes; links to anything else in a Zane
-// repository point at GitHub, so they work the same as when read there.
+// Turns a link written in a source page into a link on the site. A link
+// between published pages becomes a site route. A link to any other file in a
+// Zane repository points at GitHub, so the link leads to the same file as it
+// does when the page is read on GitHub.
 import { posix } from 'node:path';
 import { safeDecode } from './markdown.mjs';
 import { github } from './sources.mjs';
@@ -20,8 +21,9 @@ function publishedRoute(byFile, repo, repoPath) {
 
 /**
  * The GitHub page of a path in a repository: `blob` for a file, `tree` for a folder.
- * @param {'file' | 'dir'} [known]  what the path is, when the fetched copy says;
- *   otherwise a name with an extension is taken for a file.
+ * @param {'file' | 'dir'} [known]  whether the path is a file or a folder,
+ *   when the downloaded copy shows which; otherwise a name with an extension
+ *   is taken to be a file.
  */
 export function githubUrl(repo, repoPath, known) {
 	const clean = repoPath.replace(/\/+$/, '');
@@ -30,12 +32,12 @@ export function githubUrl(repo, repoPath, known) {
 	return `${github}/${repo}/${kind}/main${clean ? `/${encodePath(clean)}` : ''}`;
 }
 
-/** A decoded repository path as a URL path: each segment percent-encoded, so `#` or `?` in a name stays in it. */
+/** A decoded repository path as a URL path, with each segment percent-encoded so that a `#` or `?` in a file name stays part of the name. */
 export function encodePath(repoPath) {
 	return repoPath.split('/').map(encodeURIComponent).join('/');
 }
 
-/** Where a link to a missing file points, so that the link check reports it. */
+/** The URL that a link to a missing file points to, so that the link check reports the link. */
 export const missingPrefix = '/missing-file';
 
 /**
@@ -43,9 +45,10 @@ export const missingPrefix = '/missing-file';
  * @param {string} href  the link as written
  * @param {Map<string, { route?: string }>} byFile  published pages, keyed repo:path
  * @param {(repo: string, path: string) => boolean} [isMissing]  whether a path
- *   inside a fetched documentation folder does not exist
+ *   inside a downloaded documentation folder does not exist
  * @param {(repo: string, path: string) => 'file' | 'dir' | undefined} [kindOf]
- *   what a path is in the fetched copy, when it is there
+ *   whether a path is a file or a folder in the downloaded copy, when the
+ *   downloaded copy holds the path
  * @returns {string} the link to put on the site
  */
 export function resolveHref(from, href, byFile, isMissing = () => false, kindOf = () => undefined) {

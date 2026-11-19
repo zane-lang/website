@@ -118,7 +118,7 @@ const sourceUrl = `${github}/${page.repo}/blob/main/${page.path}`;
 	scrim?.addEventListener('click', () => setOpen(false));
 	document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
 
-	// A language label and a copy button on every code block.
+	// Adds a language label and a copy button to every code block.
 	for (const pre of document.querySelectorAll<HTMLPreElement>('.markdown pre')) {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'code-block';
@@ -151,10 +151,10 @@ const sourceUrl = `${github}/${page.repo}/blob/main/${page.path}`;
 		wrapper.append(tools);
 	}
 
-	// Keep the current page in view in a long sidebar.
+	// Scrolls a long sidebar so that the current page's entry is visible.
 	document.querySelector('.docs__sidebar [aria-current="page"]')?.scrollIntoView({ block: 'center' });
 
-	// Highlight the section being read in "On this page".
+	// Highlights, in "On this page", the section that is on screen.
 	const pairs = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')].flatMap(link => {
 		try {
 			const target = document.getElementById(decodeURIComponent(link.hash.slice(1)));

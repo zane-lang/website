@@ -1,6 +1,6 @@
-// The documentation the site publishes: one tab per source folder. Each folder
-// follows the layout in PUBLISHING.md. Plain JavaScript, so that the build
-// scripts and the Astro pages share one list.
+// The documentation that the site publishes, with one tab per source folder.
+// Each folder follows the layout in PUBLISHING.md. This file is plain
+// JavaScript, so that the build scripts and the Astro pages share one list.
 import { existsSync, lstatSync, realpathSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,16 +55,16 @@ export const sources = [
 	},
 ];
 
-/** The branch every source is read from, unless ZANE_<REPO>_REF says otherwise. */
+/** The branch that every source is read from, unless ZANE_<REPO>_REF names another branch or tag. */
 export const defaultRef = 'main';
 
-/** Each repository once, with the folders the site needs from it. */
+/** Each repository listed once, with the folders that the site needs from the repository. */
 export const repos = [...new Set(sources.map((s) => s.repo))].map((repo) => ({
 	repo,
 	folders: sources.filter((s) => s.repo === repo).map((s) => s.folder),
 }));
 
-/** The website's root: the nearest folder up from here with astro.config.mjs (also when bundled into dist/). */
+/** The website's root: the nearest folder above this file that contains astro.config.mjs (also when this file is bundled into dist/). */
 export const root = (() => {
 	let dir = dirname(fileURLToPath(import.meta.url));
 	while (!existsSync(join(dir, 'astro.config.mjs'))) {
@@ -76,8 +76,8 @@ export const root = (() => {
 })();
 
 /**
- * Where fetch-sources.mjs puts each repository: src/content/repos/<repo>, or
- * ZANE_SITE_REPOS_DIR (the tests use a scratch folder).
+ * The folder where fetch-sources.mjs puts each repository: src/content/repos/<repo>,
+ * or the folder that ZANE_SITE_REPOS_DIR names (the tests set it to a scratch folder).
  */
 export const reposDir = process.env.ZANE_SITE_REPOS_DIR || join(root, 'src/content/repos');
 
@@ -89,8 +89,9 @@ export const routeOf = (source) => `/${source.id}`;
 export const envName = (repo, kind) => `ZANE_${repo.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_${kind}`;
 
 /**
- * Whether a download recorded in the manifest can stand in for a fetch of `ref`
- * (`npm run dev` keeps downloads): only a clone of that same ref can.
+ * Whether a download recorded in the manifest can be reused instead of fetching
+ * `ref` again (`npm run dev` keeps downloads). Only a clone of the same ref can
+ * be reused.
  * @param {{ kind?: string, ref?: string } | undefined} kept
  * @param {string} ref
  */
@@ -99,12 +100,13 @@ export function keepsRef(kept, ref) {
 }
 
 /**
- * Whether linking `destination` to the local checkout `target` would delete it:
- * the fetch removes a downloaded folder before linking, so a target that is that
- * folder or lies inside it goes with it. A link is removed, not followed, so an
- * existing link is always safe to replace.
+ * Whether linking `destination` to the local checkout `target` would delete
+ * `target`. The fetch removes a downloaded folder before linking, so a target
+ * that is that folder, or lies inside it, would be deleted with it. Removing a
+ * symlink deletes only the symlink, not the folder it points to, so an
+ * existing symlink is always safe to replace.
  * @param {string} destination  src/content/repos/<repo>
- * @param {string} target  the checkout ZANE_<REPO>_PATH names
+ * @param {string} target  the checkout that ZANE_<REPO>_PATH names
  */
 export function removalDeletes(destination, target) {
 	let stat;

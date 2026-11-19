@@ -1,6 +1,6 @@
-// A Sätteri HTML-tree plugin for pages fetched from the Zane repositories:
-// rewrites their links to site routes (src/lib/links.mjs) and renders GitHub
-// alerts (`> [!NOTE]` and the other four kinds) as callouts.
+// A Sätteri HTML-tree plugin for pages downloaded from the Zane repositories.
+// The plugin rewrites the pages' links to site routes (src/lib/links.mjs) and
+// renders GitHub alerts (`> [!NOTE]` and the other four kinds) as callouts.
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,16 +8,17 @@ import { resolveHref } from '../lib/links.mjs';
 import { locateFile, siteMap } from '../lib/site-map.mjs';
 import { reposDir, sources } from '../lib/sources.mjs';
 
-/** A path inside a folder the site fetched that is not there: a broken link. */
+/** Whether a path lies inside a folder that the site downloaded but does not exist there, which makes a link to it broken. */
 export function isMissing(repo, repoPath, dir = reposDir) {
 	const fetched = sources.some((s) => s.repo === repo && (repoPath === s.folder || repoPath.startsWith(`${s.folder}/`)));
 	return fetched && !existsSync(join(dir, repo, repoPath));
 }
 
 /**
- * What a path is in the fetched copy of a repository, or undefined when the copy
- * lacks it. A sparse clone holds the repository's top-level files too, so a link
- * to its LICENSE is known to be a file.
+ * Whether a path is a file or a folder in the downloaded copy of a repository,
+ * or undefined when the copy does not hold the path. A sparse clone also holds
+ * the repository's top-level files, so a link to the repository's LICENSE is
+ * known to point to a file.
  */
 export function kindOf(repo, repoPath, dir = reposDir) {
 	const stat = statSync(join(dir, repo, repoPath), { throwIfNoEntry: false });
@@ -26,7 +27,7 @@ export function kindOf(repo, repoPath, dir = reposDir) {
 
 const alertKinds = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' };
 
-/** Turns a blockquote that starts with [!KIND] into a callout; undefined if it is a plain quote. */
+/** Turns a blockquote that starts with [!KIND] into a callout; returns undefined for a plain quote. */
 export function alertFrom(node) {
 	const paragraph = node.children.find((c) => c.type === 'element');
 	if (paragraph?.tagName !== 'p') return undefined;
@@ -36,7 +37,8 @@ export function alertFrom(node) {
 	const rest = first.value.slice(m[0].length);
 	const body = { ...paragraph, children: [...(rest ? [{ type: 'text', value: rest }] : []), ...paragraph.children.slice(1)] };
 	const children = node.children.map((c) => (c === paragraph ? body : c));
-	// A marker alone on its paragraph's first line leaves an empty paragraph behind.
+	// When the marker is alone on the paragraph's first line, removing it leaves
+	// an empty paragraph, which is dropped.
 	const kept = children.filter((c) => !(c === body && body.children.length === 0));
 	return {
 		type: 'element',

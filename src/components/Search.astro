@@ -1,6 +1,7 @@
 ---
-// Full-text search over every tab, from the Pagefind index that `npm run build`
-// writes to dist/pagefind. Opens from the button, `/` or Ctrl/Cmd+K.
+// Full-text search over every tab, using the Pagefind index that `npm run build`
+// writes to dist/pagefind. The search dialog opens from the search button, the
+// `/` key or Ctrl/Cmd+K.
 import { Search } from 'lucide-astro';
 ---
 
@@ -33,7 +34,7 @@ import { Search } from 'lucide-astro';
 			const script = document.createElement('script');
 			script.src = '/pagefind/pagefind-ui.js';
 			script.onload = () => {
-				// @ts-expect-error PagefindUI is the global the script defines.
+				// @ts-expect-error PagefindUI is the global that the Pagefind script defines.
 				new PagefindUI({
 					element: '#search-ui',
 					showSubResults: true,
@@ -120,7 +121,7 @@ import { Search } from 'lucide-astro';
 	.search__panel { padding: 1.25rem; }
 	.search__unavailable { font-size: 0.9rem; }
 
-	// Pagefind UI, in the site's palette.
+	// The Pagefind UI, styled in the site's palette.
 	.search :global(#search-ui) {
 		--pagefind-ui-scale: 0.85;
 		--pagefind-ui-primary: var(--accent);

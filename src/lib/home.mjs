@@ -1,5 +1,5 @@
-// The home page's code sample: the first `zane` example under "A taste of Zane"
-// in the zane-lang/zane README, fetched with the sources.
+// The code sample on the home page: the first `zane` example under "A taste of
+// Zane" in the zane-lang/zane README, which is downloaded with the sources.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { reposDir } from './sources.mjs';

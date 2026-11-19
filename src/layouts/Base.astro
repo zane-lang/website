@@ -27,8 +27,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href;
 					document.documentElement.setAttribute('data-theme', theme);
 					return;
 				}
-				// No saved choice: follow the OS, also when it changes, until the
-				// theme toggle sets data-theme-locked.
+				// With no saved theme, the page follows the OS theme, including
+				// when the OS theme changes, until the theme toggle sets
+				// data-theme-locked.
 				const query = matchMedia('(prefers-color-scheme: light)');
 				const apply = () => {
 					if (document.documentElement.hasAttribute('data-theme-locked')) {

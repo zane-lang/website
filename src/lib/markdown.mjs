@@ -1,5 +1,6 @@
-// Small, dependency-free readers for the parts of a page the site needs before
-// rendering it: its title, its description and, for an index, its links.
+// Small, dependency-free readers for the parts of a page that the site needs
+// before rendering the page: the title, the description and, for an index
+// page, the links.
 
 /** decodeURIComponent, or the text unchanged when its %-escapes are malformed. */
 export function safeDecode(text) {
@@ -29,12 +30,13 @@ export function lines(markdown) {
 	return out;
 }
 
-/** A code span: a run of backticks, its text, and a run of the same length. */
+/** A code span: a run of backticks, the span's text, and a closing run of the same length. */
 const codeSpan = /(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g;
 
-/** Inline Markdown to plain text: code spans, emphasis, links, HTML tags. */
+/** Converts inline Markdown (code spans, emphasis, links, HTML tags) to plain text. */
 export function plain(text) {
-	// Code spans are set aside first, so that nothing inside them reads as emphasis.
+	// Code spans are set aside first, so that nothing inside a code span is read
+	// as emphasis.
 	const spans = [];
 	const held = text.replace(codeSpan, (_, _ticks, body) => `\u0000${spans.push(body.trim()) - 1}\u0000`);
 	return held
@@ -62,7 +64,7 @@ export function titleOf(markdown) {
 }
 
 /**
- * The first paragraph after the title, as plain text: what the page is about.
+ * The first paragraph after the title, as plain text: the page's description.
  * Skips blockquotes, lists, tables, HTML blocks and headings.
  */
 export function descriptionOf(markdown, maxLength = 200) {

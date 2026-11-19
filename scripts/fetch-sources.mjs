@@ -1,13 +1,14 @@
-// Downloads the documentation folders the site publishes (src/lib/sources.mjs)
-// into src/content/repos/<repo>, one shallow sparse clone per repository.
+// Downloads the documentation folders that the site publishes
+// (src/lib/sources.mjs) into src/content/repos/<repo>, with one shallow,
+// sparse clone per repository.
 //
-//   ZANE_<REPO>_REF=<branch or tag>  read that ref instead of main
-//   ZANE_<REPO>_PATH=<directory>     use a local checkout instead (linked, so edits show live)
+//   ZANE_<REPO>_REF=<branch or tag>  read that branch or tag instead of main
+//   ZANE_<REPO>_PATH=<directory>     link a local checkout instead, so edits show up when saved
 //   --skip-if-exists                 keep repositories that are already downloaded
-//   --verbose                        list every page no index links
+//   --verbose                        list every page that no index page links to
 //
-// Afterwards it reads every index and reports pages no index links, and fails
-// when a source has no index at all.
+// After downloading, the script reads every index page, reports the pages that
+// no index page links to, and fails when a source folder has no index page.
 import { execFile } from 'node:child_process';
 import { existsSync, lstatSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises';
@@ -86,7 +87,7 @@ async function clone(repo, folders, ref) {
 		const stderr = typeof error?.stderr === 'string' ? error.stderr.trim() : '';
 		throw new Error(`zane-lang/${repo}@${ref}: ${stderr || error?.message || 'clone failed'}`, { cause: error });
 	} finally {
-		// A failed cleanup must not hide the error that got us here.
+		// A failed cleanup must not hide the error that caused the cleanup.
 		await rm(work, { recursive: true, force: true }).catch((error) => {
 			console.warn(`Could not remove ${work}: ${error.message}`);
 		});
@@ -123,7 +124,8 @@ if (failures.length) {
 	process.exit(1);
 }
 
-// Errors stop the build; unlisted pages are only reported (many are maintainer notes).
+// Errors stop the build. Pages that no index page links to are only reported,
+// because many of them are maintainer notes.
 const { problems } = buildSiteMap();
 const errors = problems.filter((p) => p.level === 'error');
 const warnings = problems.filter((p) => p.level === 'warning');

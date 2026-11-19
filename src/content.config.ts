@@ -4,10 +4,11 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { sources, reposDir } from './lib/sources.mjs';
 
-// One collection per tab, over the folder fetch-sources.mjs downloaded. Pages
-// have no frontmatter: the title is the first heading (PUBLISHING.md), and
-// which pages are published comes from the folder's index (src/lib/site-map.mjs).
-// An entry's id is its path inside the folder, without `.md`.
+// One content collection per tab, over the folder that fetch-sources.mjs
+// downloaded. Pages have no frontmatter: a page's title is its first heading
+// (PUBLISHING.md), and the folder's index page sets which pages are published
+// (src/lib/site-map.mjs). An entry's id is the page's path inside the folder,
+// without `.md`.
 export const collections = Object.fromEntries(
 	sources.map((source) => [
 		source.id,
