@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { titleOf, descriptionOf, indexOutline, lines } from '../src/lib/markdown.mjs';
 import { buildSiteMap, sharedPrefix, routeForPath } from '../src/lib/site-map.mjs';
 import { resolveHref, githubUrl } from '../src/lib/links.mjs';
-import { alertFrom } from '../src/plugins/zane-docs.mjs';
+import { alertFrom, isMissing } from '../src/plugins/zane-docs.mjs';
 import { sampleFrom } from '../src/lib/home.mjs';
 import { sources } from '../src/lib/sources.mjs';
 
@@ -102,6 +102,19 @@ test('links to anything unpublished point at GitHub', () => {
 	assert.equal(resolveHref(from, pinned, map.byFile), pinned, 'a commit-pinned link stays as written');
 	assert.equal(resolveHref(from, 'https://example.com/a.md', map.byFile), 'https://example.com/a.md');
 	assert.equal(githubUrl('std', 'lib/core'), 'https://github.com/zane-lang/std/tree/main/lib/core');
+});
+
+test('a link to a missing file in a fetched folder points where the link check reports it', () => {
+	const missing = (repo, path) => isMissing(repo, path, fixtures);
+	const from = { repo: 'spec', path: 'spec/foundations.md' };
+	assert.equal(resolveHref(from, 'typo.md#x', map.byFile, missing), '/missing-file/spec/spec/typo.md');
+	assert.equal(resolveHref(from, '../stories/typo.md', map.byFile, missing), '/missing-file/spec/stories/typo.md');
+	assert.equal(
+		resolveHref(from, 'https://github.com/zane-lang/docs/blob/main/docs/typo.md', map.byFile, missing),
+		'/missing-file/docs/docs/typo.md',
+	);
+	assert.equal(resolveHref(from, 'draft.md', map.byFile, missing), 'https://github.com/zane-lang/spec/blob/main/spec/draft.md');
+	assert.equal(resolveHref(from, '../memorybench/', map.byFile, missing), 'https://github.com/zane-lang/spec/tree/main/memorybench');
 });
 
 const text = (value) => ({ type: 'text', value });

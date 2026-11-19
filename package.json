@@ -8,9 +8,9 @@
 	"scripts": {
 		"fetch": "node scripts/fetch-sources.mjs",
 		"predev": "node scripts/fetch-sources.mjs --skip-if-exists",
-		"dev": "astro dev",
+		"dev": "astro dev --force",
 		"prebuild": "node scripts/fetch-sources.mjs",
-		"build": "astro build",
+		"build": "astro build --force",
 		"postbuild": "pagefind --site dist && node scripts/check-links.mjs",
 		"check-links": "node scripts/check-links.mjs",
 		"test": "node --test test/*.test.mjs",

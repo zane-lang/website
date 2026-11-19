@@ -1,9 +1,18 @@
 // A Sätteri HTML-tree plugin for pages fetched from the Zane repositories:
 // rewrites their links to site routes (src/lib/links.mjs) and renders GitHub
 // alerts (`> [!NOTE]` and the other four kinds) as callouts.
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveHref } from '../lib/links.mjs';
 import { locateFile, siteMap } from '../lib/site-map.mjs';
+import { reposDir, sources } from '../lib/sources.mjs';
+
+/** A path inside a folder the site fetched that is not there: a broken link. */
+export function isMissing(repo, repoPath, dir = reposDir) {
+	const fetched = sources.some((s) => s.repo === repo && (repoPath === s.folder || repoPath.startsWith(`${s.folder}/`)));
+	return fetched && !existsSync(join(dir, repo, repoPath));
+}
 
 const alertKinds = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' };
 
@@ -41,7 +50,7 @@ export function zaneDocs(ctx) {
 				visit(node, visitCtx) {
 					const href = node.properties?.href;
 					if (!from || typeof href !== 'string') return;
-					const resolved = resolveHref(from, href, byFile);
+					const resolved = resolveHref(from, href, byFile, isMissing);
 					if (resolved !== href) visitCtx.setProperty(node, 'href', resolved);
 				},
 			},

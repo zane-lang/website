@@ -72,7 +72,8 @@ ZANE_SPEC_PATH=../spec npm run dev
 `ZANE_<REPO>_REF` reads that branch or tag of the repository instead of `main`;
 `ZANE_<REPO>_PATH` links a local checkout, so edits show up as you save them.
 `<REPO>` is the repository's name in capitals: `DOCS`, `SPEC`, `ZANE`, `STD`,
-`COMPILER`.
+`COMPILER`. A page's links are worked out when it is rendered, so after adding or
+removing a page, restart `npm run dev` to update the links that point at it.
 
 ## Adding a tab
 
