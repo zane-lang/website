@@ -1,50 +1,133 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
+//
+// The brand colours come from the Zane logo (github.com/zane-lang/logos):
+// maroon #653f3f and gold #d5aa41. Neutrals are tinted towards the maroon.
+// The inline script in Base.astro always sets data-theme; the media query only
+// covers visitors without JavaScript.
 
-:root[data-theme="light"] {
-	--bg:          #f5f4f0;
-	--bg-subtle:   #eceae4;
-	--surface:     #ffffff;
-	--border:      #e0ddd6;
-	--text:        #1a1916;
-	--text-muted:  #7a7870;
-	--accent:      #5b6af0;
-	--accent-soft: #eceeff;
-	--code-bg:     #f0efe9;
-	--gold: #8f7f58;
-	--gold-hover: #5a4f35;
+:root {
+	--brand-maroon: #653f3f;
+	--brand-gold:   #d5aa41;
+
+	--radius-sm: 6px;
+	--radius:    10px;
+	--radius-lg: 14px;
+
+	--font-sans: 'Geist', system-ui, sans-serif;
+	--font-mono: 'Geist Mono', ui-monospace, monospace;
+
+	--nav-height: 60px;
+	--content-width: 1200px;
 }
 
-:root[data-theme="dark"] {
-	--bg:          #13121a;
-	--bg-subtle:   #1a1923;
-	--surface:     #1f1e2a;
-	--border:      #2a2938;
-	--text:        #e8e6f0;
-	--text-muted:  #7b7a90;
-	--accent:      #8b96f8;
-	--accent-soft: #1e2040;
-	--code-bg:     #17161f;
-	--gold: #8f7f58;
-	--gold-hover: #b8a878;
+@mixin dark {
+	color-scheme: dark;
+
+	--bg:           #141011;
+	--bg-subtle:    #1b1516;
+	--surface:      #221b1c;
+	--surface-2:    #2a2122;
+	--border:       #382c2d;
+	--border-strong:#4d3d3e;
+	--text:         #efe8e3;
+	--text-muted:   #a8999a;
+	--text-faint:   #786b6b;
+
+	--accent:       #e0b552;          // links, active states
+	--accent-hover: #f0cb72;
+	--accent-soft:  rgb(213 170 65 / 0.12);
+	--on-accent:    #1f1609;          // text on a solid accent fill
+	--tint:         #3a2526;          // maroon wash for highlights
+	--tint-text:    #e7c7c2;
+
+	--code-bg:      #1a1415;
+
+	--astro-code-foreground:              #e6ddd8;
+	--astro-code-background:              var(--code-bg);
+	--astro-code-token-keyword:           #e0b552;
+	--astro-code-token-constant:          #e59a7d;
+	--astro-code-token-string:            #b7c98a;
+	--astro-code-token-string-expression: #b7c98a;
+	--astro-code-token-comment:           #7f706f;
+	--astro-code-token-function:          #f0d9a0;
+	--astro-code-token-parameter:         #e6ddd8;
+	--astro-code-token-punctuation:       #9d8f8e;
+	--astro-code-token-link:              #e0b552;
+}
+
+@mixin light {
+	color-scheme: light;
+
+	--bg:           #faf7f3;
+	--bg-subtle:    #f3ede6;
+	--surface:      #ffffff;
+	--surface-2:    #f7f2ec;
+	--border:       #e6ddd3;
+	--border-strong:#d3c6b9;
+	--text:         #241c1c;
+	--text-muted:   #6c5f5d;
+	--text-faint:   #9a8c89;
+
+	--accent:       #653f3f;
+	--accent-hover: #4a2c2c;
+	--accent-soft:  rgb(101 63 63 / 0.08);
+	--on-accent:    #fdf8f2;
+	--tint:         #f6e9cf;          // gold wash for highlights
+	--tint-text:    #5e4510;
+
+	--code-bg:      #f6f1ea;
+
+	--astro-code-foreground:              #2e2524;
+	--astro-code-background:              var(--code-bg);
+	--astro-code-token-keyword:           #653f3f;
+	--astro-code-token-constant:          #a14d2a;
+	--astro-code-token-string:            #4f6b1f;
+	--astro-code-token-string-expression: #4f6b1f;
+	--astro-code-token-comment:           #958683;
+	--astro-code-token-function:          #8a5f0b;
+	--astro-code-token-parameter:         #2e2524;
+	--astro-code-token-punctuation:       #7d6f6d;
+	--astro-code-token-link:              #653f3f;
+}
+
+:root,
+:root[data-theme="dark"] { @include dark; }
+:root[data-theme="light"] { @include light; }
+
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme]) { @include light; }
 }
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 
 html {
-	font-family: 'Geist', sans-serif;
+	font-family: var(--font-sans);
 	font-size: 16px;
 	line-height: 1.6;
 	background: var(--bg);
 	color: var(--text);
-	transition: background 0.2s ease, color 0.2s ease;
+	scroll-padding-top: calc(var(--nav-height) + 1rem);
 }
 
 body {
 	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: var(--bg);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+.container {
+	width: 100%;
+	max-width: var(--content-width);
+	margin: 0 auto;
+	padding: 0 1.5rem;
+
+	@media (max-width: 600px) { padding: 0 1rem; }
 }
 
 // ── Typography ────────────────────────────────────────────────────────────────
@@ -52,58 +135,61 @@ body {
 h1, h2, h3, h4, h5, h6 {
 	font-weight: 600;
 	line-height: 1.2;
+	letter-spacing: -0.02em;
 	color: var(--text);
+	text-wrap: balance;
 }
 
-h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
-h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
-h3 { font-size: 1.25rem; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -0.03em; }
+h2 { font-size: clamp(1.4rem, 3vw, 1.75rem); }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1rem; }
 
-p {
-	color: var(--text-muted);
-	max-width: 65ch;
-}
+p { color: var(--text-muted); }
 
 a {
 	color: var(--accent);
 	text-decoration: none;
+	transition: color 0.15s ease;
 
-	&:hover {
-		text-decoration: underline; 
-		cursor: pointer;
-	}
+	&:hover { color: var(--accent-hover); }
 }
 
 strong { font-weight: 600; color: var(--text); }
 
 // ── Code ──────────────────────────────────────────────────────────────────────
 
-code {
-	font-family: 'Geist Mono', monospace;
+code, kbd, samp {
+	font-family: var(--font-mono);
 	font-size: 0.875em;
+}
+
+:not(pre) > code {
 	background: var(--code-bg);
 	border: 1px solid var(--border);
-	border-radius: 4px;
-	padding: 0.15em 0.4em;
+	border-radius: 5px;
+	padding: 0.1em 0.35em;
+	color: var(--text);
 }
 
 pre {
-	font-family: 'Geist Mono', monospace;
-	font-size: 0.9rem;
-	background: var(--code-bg);
-	border: 1px solid var(--border);
-	border-radius: 10px;
-	padding: 1.5rem;
-	overflow-x: auto;
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
 	line-height: 1.7;
+	background: var(--code-bg);
+	color: var(--astro-code-foreground);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 1.1rem 1.25rem;
+	overflow-x: auto;
+	tab-size: 4;
 
-	code {
-		background: none;
-		border: none;
-		padding: 0;
-		font-size: inherit;
-	}
+	code { font-size: inherit; }
 }
+
+// Shiki output: the css-variables theme writes inline styles; the background
+// comes from our token so it matches the surrounding surface.
+pre.astro-code { background-color: var(--code-bg) !important; }
 
 // ── UI Primitives ─────────────────────────────────────────────────────────────
 
@@ -113,183 +199,116 @@ hr {
 }
 
 ::selection {
-	background: var(--accent-soft);
-	color: var(--accent);
+	background: color-mix(in srgb, var(--brand-gold) 35%, transparent);
+	color: var(--text);
 }
 
 :focus-visible {
 	outline: 2px solid var(--accent);
-	outline-offset: 3px;
+	outline-offset: 2px;
 	border-radius: 4px;
 }
 
 // ── Scrollbar ─────────────────────────────────────────────────────────────────
 
-::-webkit-scrollbar       { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+html { scrollbar-color: var(--border-strong) transparent; }
+::-webkit-scrollbar       { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+	background: var(--border-strong);
+	border-radius: 99px;
+	border: 2px solid var(--bg);
+}
 
+// ── Markdown content ──────────────────────────────────────────────────────────
 
-// Markdown content styles
 .markdown {
+	color: var(--text);
+	font-size: 1rem;
+	line-height: 1.75;
+	min-width: 0;
+
+	> * + * { margin-top: 1.1rem; }
+
+	h1 {
+		font-size: clamp(2rem, 4vw, 2.5rem);
+		margin-bottom: 1.5rem;
+	}
+	h2 {
+		margin-top: 2.75rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--border);
+		font-size: 1.5rem;
+	}
+	h3 { margin-top: 2rem; }
+	h4 { margin-top: 1.5rem; }
+	h1 + *, h2 + *, h3 + *, h4 + * { margin-top: 0.75rem; }
+
+	p { color: var(--text); }
+
+	a {
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+		text-underline-offset: 3px;
+
+		&:hover { text-decoration-color: currentColor; }
+	}
+
+	ul, ol {
+		padding-left: 1.4rem;
+
+		li + li { margin-top: 0.35rem; }
+		li::marker { color: var(--text-faint); }
+		ul, ol { margin-top: 0.35rem; }
+	}
+
+	blockquote {
+		border-left: 3px solid var(--brand-gold);
+		background: var(--surface-2);
+		padding: 0.75rem 1.1rem;
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		color: var(--text-muted);
+
+		p { color: inherit; }
+		> * + * { margin-top: 0.6rem; }
+	}
+
+	img {
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
+	}
+
+	hr { margin: 2.5rem 0; }
+
+	// Tables scroll on their own instead of widening the page.
 	table {
+		display: block;
 		width: 100%;
+		overflow-x: auto;
 		border-collapse: collapse;
-		font-size: 0.9rem;
-		margin: 1.5rem 0;
+		font-size: 0.925rem;
+		line-height: 1.55;
+	}
+
+	th, td {
+		text-align: left;
+		padding: 0.6rem 1rem;
+		vertical-align: top;
 	}
 
 	th {
-		text-align: left;
 		font-weight: 600;
 		color: var(--text);
-		padding: 0.6rem 1rem;
-		border-bottom: 2px solid var(--border);
+		border-bottom: 1px solid var(--border-strong);
+		white-space: nowrap;
 	}
 
 	td {
-		padding: 0.6rem 1rem;
 		border-bottom: 1px solid var(--border);
 		color: var(--text-muted);
 	}
 
-	tr:last-child td {
-		border-bottom: none;
-	}
-
-	tr:hover td {
-		background: var(--bg-subtle);
-	}
-}
-
-// ── Base ──────────────────────────────────────────────────────────────────────
-
-html {
-	font-family: 'Geist', sans-serif;
-	font-size: 16px;
-	line-height: 1.6;
-	background: var(--bg);
-	color: var(--text);
-	transition: background 0.2s ease, color 0.2s ease;
-}
-
-body {
-	min-height: 100vh;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-}
-
-// ── Typography ────────────────────────────────────────────────────────────────
-
-h1, h2, h3, h4, h5, h6 {
-	font-weight: 600;
-	line-height: 1.2;
-	color: var(--text);
-}
-
-h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
-h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
-h3 { font-size: 1.25rem; }
-
-p {
-	color: var(--text-muted);
-	max-width: 65ch;
-}
-
-a {
-	color: var(--accent);
-	text-decoration: none;
-
-	&:hover {
-		text-decoration: underline; 
-		cursor: pointer;
-	}
-}
-
-strong { font-weight: 600; color: var(--text); }
-
-// ── Code ──────────────────────────────────────────────────────────────────────
-
-code {
-	font-family: 'Geist Mono', monospace;
-	font-size: 0.875em;
-	background: var(--code-bg);
-	border: 1px solid var(--border);
-	border-radius: 4px;
-	padding: 0.15em 0.4em;
-}
-
-pre {
-	font-family: 'Geist Mono', monospace;
-	font-size: 0.9rem;
-	background: var(--code-bg);
-	border: 1px solid var(--border);
-	border-radius: 10px;
-	padding: 1.5rem;
-	overflow-x: auto;
-	line-height: 1.7;
-
-	code {
-	  background: none;
-	  border: none;
-	  padding: 0;
-	  font-size: inherit;
-	}
-}
-
-// ── UI Primitives ─────────────────────────────────────────────────────────────
-
-hr {
-	border: none;
-	border-top: 1px solid var(--border);
-}
-
-::selection {
-	background: var(--accent-soft);
-	color: var(--accent);
-}
-
-:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 3px;
-	border-radius: 4px;
-}
-
-// ── Scrollbar ─────────────────────────────────────────────────────────────────
-
-::-webkit-scrollbar       { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-
-
-// Markdown content styles
-.markdown {
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.9rem;
-		margin: 1.5rem 0;
-	}
-
-	th {
-		text-align: left;
-		font-weight: 600;
-		color: var(--text);
-		padding: 0.6rem 1rem;
-		border-bottom: 2px solid var(--border);
-	}
-
-	td {
-		padding: 0.6rem 1rem;
-		border-bottom: 1px solid var(--border);
-		color: var(--text-muted);
-	}
-
-	tr:last-child td {
-		border-bottom: none;
-	}
-
-	tr:hover td {
-		background: var(--bg-subtle);
-	}
+	td:first-child code, td:first-child { white-space: nowrap; }
+	tr:last-child td { border-bottom: none; }
+	tbody tr:hover td { background: var(--bg-subtle); }
 }

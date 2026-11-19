@@ -1,4 +1,11 @@
 export const site = {
 	name: 'Zane',
-	icon: 'https://raw.githubusercontent.com/zane-lang/logos/main/zane/zane-render.svg',
-}
+	description:
+		'Zane is a systems programming language with deterministic memory management, no garbage collector and no lifetime annotations.',
+	icon: '/favicon.svg',
+	logo: '/favicon.svg',
+	github: 'https://github.com/zane-lang',
+	// Where the pages under /docs come from; used for "Edit this page" links.
+	docsRepo: 'https://github.com/zane-lang/docs',
+	docsBranch: 'main',
+};

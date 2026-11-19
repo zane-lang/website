@@ -1,0 +1,25 @@
+{
+	"name": "zane",
+	"displayName": "Zane",
+	"scopeName": "source.zane",
+	"fileTypes": ["zn", "zane"],
+	"patterns": [
+		{ "name": "comment.line.documentation.zane", "match": "///.*$" },
+		{ "name": "comment.line.double-slash.zane", "match": "//.*$" },
+		{
+			"name": "string.quoted.double.zane",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [{ "name": "constant.character.escape.zane", "match": "\\\\." }]
+		},
+		{ "name": "keyword.control.zane", "match": "\\b(?:implicit|variant|foreign|package|resolve|struct|handle|import|return|alias|match|spawn|abort|type|enum|init|mut|as)\\b" },
+		{ "name": "keyword.operator.word.zane", "match": "\\b(?:and|or)\\b" },
+		{ "name": "constant.language.boolean.zane", "match": "\\b(?:true|false)\\b" },
+		{ "name": "variable.language.zane", "match": "\\bthis\\b" },
+		{ "name": "constant.numeric.zane", "match": "\\b[0-9]+(?:'[0-9]+)*(?:\\.[0-9]+)?\\b" },
+		{ "name": "entity.name.type.zane", "match": "\\b_?[A-Z][A-Za-z0-9]*\\b" },
+		{ "name": "entity.name.function.zane", "match": "\\b_?[a-z][A-Za-z0-9]*(?=\\s*\\()" },
+		{ "name": "keyword.operator.zane", "match": "\\?\\?|=>|==|~=|<=|>=|[=+\\-*/#&^!?~<>:]" },
+		{ "name": "punctuation.separator.zane", "match": "[;,.$@]" }
+	]
+}

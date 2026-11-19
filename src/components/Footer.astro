@@ -1,0 +1,59 @@
+---
+import { site } from '../config.ts';
+---
+
+<footer class="footer">
+	<div class="container footer__inner">
+		<a href="/" class="footer__brand">
+			<img src={site.logo} alt="" width="20" height="20" />
+			<span>{site.name}</span>
+		</a>
+		<nav class="footer__links" aria-label="Footer">
+			<a href="/docs">Docs</a>
+			<a href="https://github.com/zane-lang/zane" target="_blank" rel="noopener">The zane command</a>
+			<a href="https://github.com/zane-lang/spec" target="_blank" rel="noopener">Specification</a>
+			<a href={site.github} target="_blank" rel="noopener">GitHub</a>
+		</nav>
+	</div>
+</footer>
+
+<style lang="scss">
+	.footer {
+		margin-top: auto;
+		border-top: 1px solid var(--border);
+		background: var(--bg-subtle);
+		font-size: 0.875rem;
+
+		&__inner {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 1rem 2rem;
+			padding-top: 1.5rem;
+			padding-bottom: 1.5rem;
+		}
+
+		&__brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			color: var(--text);
+			font-weight: 600;
+
+			&:hover { color: var(--text); }
+		}
+
+		&__links {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem 1.5rem;
+
+			a {
+				color: var(--text-muted);
+
+				&:hover { color: var(--text); }
+			}
+		}
+	}
+</style>
