@@ -172,16 +172,20 @@ const editUrl = sourcePath ? `${site.docsRepo}/edit/${site.docsBranch}/${sourceP
 	document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
 
 	// Highlight the section being read in "On this page".
-	const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
-	const targets = links
-		.map(a => document.getElementById(decodeURIComponent(a.hash.slice(1))))
-		.filter((el): el is HTMLElement => !!el);
-	if (targets.length) {
+	const pairs = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')].flatMap(link => {
+		try {
+			const target = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+			return target ? [{ link, target }] : [];
+		} catch {
+			return []; // malformed percent-encoding
+		}
+	});
+	if (pairs.length) {
 		const update = () => {
 			const offset = 120;
-			let active = targets[0];
-			for (const t of targets) if (t.getBoundingClientRect().top - offset <= 0) active = t;
-			for (const a of links) a.classList.toggle('active', decodeURIComponent(a.hash.slice(1)) === active.id);
+			let active = pairs[0];
+			for (const p of pairs) if (p.target.getBoundingClientRect().top - offset <= 0) active = p;
+			for (const p of pairs) p.link.classList.toggle('active', p === active);
 		};
 		addEventListener('scroll', update, { passive: true });
 		update();
