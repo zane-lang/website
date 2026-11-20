@@ -1,0 +1,30 @@
+---
+// Every published documentation page, in every tab. Each source folder's index
+// page sets which pages exist and their routes (src/lib/site-map.mjs).
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import DocsLayout from '../layouts/DocsLayout.astro';
+import { siteMap } from '../lib/site-map.mjs';
+import { sources } from '../lib/sources.mjs';
+
+export async function getStaticPaths() {
+	const { byFile } = siteMap();
+	const paths = [];
+	for (const source of sources) {
+		const entries = (await getCollection(source.id as 'docs')) as CollectionEntry<'docs'>[];
+		for (const entry of entries) {
+			const page = byFile.get(`${source.repo}:${source.folder}/${entry.id}.md`);
+			if (page?.route) paths.push({ params: { slug: page.route.slice(1) }, props: { entry, route: page.route } });
+		}
+	}
+	return paths;
+}
+
+const { entry, route } = Astro.props as { entry: CollectionEntry<'docs'>; route: string };
+const { Content, headings } = await render(entry);
+const node = siteMap().tabs.flatMap((t) => t.pages).find((p) => p.route === route)!;
+const page = { ...node, route, path: node.path! };
+---
+
+<DocsLayout page={page} headings={headings}>
+	<Content />
+</DocsLayout>

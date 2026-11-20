@@ -1,0 +1,29 @@
+name: Build
+
+# Builds the site the way production does: fetch every source repository,
+# build, index for search and check every link. The workflow also runs daily,
+# because a change merged in one of the source repositories can break the next
+# deploy.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

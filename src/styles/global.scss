@@ -4,8 +4,8 @@
 //
 // The brand colours come from the Zane logo (github.com/zane-lang/logos):
 // maroon #653f3f and gold #d5aa41. Neutrals are tinted towards the maroon.
-// The inline script in Base.astro always sets data-theme; the media query only
-// covers visitors without JavaScript.
+// The inline script in Base.astro always sets data-theme, so the media query
+// applies only to visitors without JavaScript.
 
 :root {
 	--brand-maroon: #653f3f;
@@ -19,6 +19,8 @@
 	--font-mono: 'Geist Mono', ui-monospace, monospace;
 
 	--nav-height: 60px;
+
+	@media (max-width: 900px) { --nav-height: 105px; }
 	--content-width: 1200px;
 }
 
@@ -187,8 +189,9 @@ pre {
 	code { font-size: inherit; }
 }
 
-// Shiki output: the css-variables theme writes inline styles; the background
-// comes from our token so it matches the surrounding surface.
+// Shiki output: the css-variables theme writes inline styles, and the
+// background comes from a site token so that it matches the surrounding
+// surface.
 pre.astro-code { background-color: var(--code-bg) !important; }
 
 // ── UI Primitives ─────────────────────────────────────────────────────────────
@@ -280,7 +283,7 @@ html { scrollbar-color: var(--border-strong) transparent; }
 
 	hr { margin: 2.5rem 0; }
 
-	// Tables scroll on their own instead of widening the page.
+	// A wide table scrolls horizontally instead of widening the page.
 	table {
 		display: block;
 		width: 100%;
@@ -311,4 +314,77 @@ html { scrollbar-color: var(--border-strong) transparent; }
 	td:first-child code, td:first-child { white-space: nowrap; }
 	tr:last-child td { border-bottom: none; }
 	tbody tr:hover td { background: var(--bg-subtle); }
+
+	// GitHub alerts (`> [!NOTE]` …), rendered by src/plugins/zane-docs.mjs.
+	.alert {
+		--alert: var(--accent);
+		border: 1px solid color-mix(in srgb, var(--alert) 35%, var(--border));
+		border-left: 3px solid var(--alert);
+		background: color-mix(in srgb, var(--alert) 6%, var(--surface));
+		padding: 0.75rem 1.1rem;
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+		> * + * { margin-top: 0.6rem; }
+
+		&--tip { --alert: #3f8a5a; }
+		&--important { --alert: #7b5ea7; }
+		&--warning { --alert: var(--brand-gold); }
+		&--caution { --alert: #b4483c; }
+	}
+
+	.alert__title {
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--alert) !important;
+	}
+
+	details {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		padding: 0.6rem 1rem;
+		background: var(--surface);
+
+		> summary { cursor: pointer; font-weight: 500; }
+		&[open] > summary { margin-bottom: 0.6rem; }
+	}
+
+	// Code blocks get a language label and a copy button from DocsLayout.astro.
+	.code-block {
+		position: relative;
+
+		// Space above the first line for the language label and the Copy button.
+		pre { margin: 0; padding-top: 2.2rem; }
+	}
+
+	.code-block__tools {
+		position: absolute;
+		top: 0.4rem;
+		right: 0.45rem;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		opacity: 0.85;
+	}
+
+	.code-block__lang {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--text-faint);
+		text-transform: lowercase;
+	}
+
+	.code-block__copy {
+		font: inherit;
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 5px;
+		padding: 0.15rem 0.5rem;
+		cursor: pointer;
+
+		&:hover { color: var(--text); border-color: var(--accent); }
+	}
 }

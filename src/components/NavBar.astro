@@ -1,6 +1,7 @@
 ---
 import { Sun, Moon, Github } from 'lucide-astro';
 import { site } from '../config.ts';
+import Search from './Search.astro';
 
 interface NavLink {
 	label: string;
@@ -34,6 +35,7 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 			))}
 		</nav>
 		<div class="nav__actions">
+			<Search />
 			<slot name="actions" />
 			<a href={site.github} class="nav__icon" aria-label="Zane on GitHub" target="_blank" rel="noopener">
 				<Github size={17} />
@@ -103,6 +105,8 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 			display: flex;
 			gap: 0.25rem;
 			min-width: 0;
+			overflow-x: auto;
+			scrollbar-width: none;
 		}
 
 		&__link {
@@ -144,10 +148,28 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 			}
 		}
 
-		@media (max-width: 600px) {
-			&__inner { gap: 0.75rem; }
-			&__logo span { display: none; }
+		// On narrow screens, the tabs move to a scrolling strip under the bar,
+		// and global.scss increases --nav-height to fit the strip.
+		@media (max-width: 900px) {
+			&__inner {
+				height: auto;
+				flex-wrap: wrap;
+				gap: 0 0.75rem;
+			}
+			&__logo, &__actions { height: 60px; }
+			&__links {
+				order: 3;
+				flex-basis: 100%;
+				height: 44px;
+				align-items: center;
+				margin: 0 -0.5rem;
+				border-top: 1px solid var(--border);
+			}
 			&__link { padding: 0.35rem 0.5rem; }
+		}
+
+		@media (max-width: 440px) {
+			&__link { padding: 0.35rem 0.4rem; font-size: 0.85rem; }
 		}
 	}
 

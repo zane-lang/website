@@ -21,7 +21,6 @@ pnpm-debug.log*
 .DS_Store
 .vercel
 
-# downloaded documentation
-src/content/docs/
-src/content/.docs-*/
+# documentation downloaded by scripts/fetch-sources.mjs
+src/content/repos/
 .env*
