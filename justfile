@@ -26,3 +26,7 @@ ship:
 	else
 		echo "Deployment cancelled."
 	fi
+
+# Check prose with the prose-lint commit pinned in .github/workflows/prose.yml.
+prose:
+	uvx --from git+https://github.com/zane-lang/prose-lint@107c5f768ea3ce4936d6fdff1b0f30fac9237615 prose-lint .
