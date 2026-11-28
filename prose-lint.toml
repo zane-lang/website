@@ -1,6 +1,0 @@
-# prose-lint has no JavaScript or TypeScript lexer; both write // and
-# /* */ comments, which the C lexer reads.
-[languages]
-".mjs" = "c"
-".js" = "c"
-".ts" = "c"
