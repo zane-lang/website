@@ -1,6 +1,6 @@
 # The Zane Language Specification
 
-What every construct means.
+The meaning of every construct.
 
 ## Foundations
 

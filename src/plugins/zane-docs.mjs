@@ -1,6 +1,7 @@
 // A Sätteri HTML-tree plugin for pages downloaded from the Zane repositories.
 // The plugin rewrites the pages' links to site routes (src/lib/links.mjs) and
-// renders GitHub alerts (`> [!NOTE]` and the other four kinds) as callouts.
+// renders GitHub alerts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`
+// and `[!CAUTION]`) as callouts.
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,8 +18,7 @@ export function isMissing(repo, repoPath, dir = reposDir) {
 /**
  * Whether a path is a file or a folder in the downloaded copy of a repository,
  * or undefined when the copy does not hold the path. A sparse clone also holds
- * the repository's top-level files, so a link to the repository's LICENSE is
- * known to point to a file.
+ * the repository's top-level files, so the function reports a link to the repository's LICENSE as a file.
  */
 export function kindOf(repo, repoPath, dir = reposDir) {
 	const stat = statSync(join(dir, repo, repoPath), { throwIfNoEntry: false });

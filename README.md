@@ -38,7 +38,7 @@ the build scripts.
 
 ## Where the code lives
 
-| Path | What it does |
+| Path | Role |
 |---|---|
 | `src/lib/sources.mjs` | The tabs: which repository and folder each one shows |
 | `scripts/fetch-sources.mjs` | Downloads those folders, and reports pages that no index page links to |
